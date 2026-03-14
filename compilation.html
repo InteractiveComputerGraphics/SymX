@@ -1,0 +1,671 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Symbol-Data Overview" href="symbol_data.html"><link rel="prev" title="Symbol Reference API" href="api_scalar_vector_matrix.html">
+        <link rel="prefetch" href="_static/symx250.png" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>Compilation - SymX docs</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=51155216" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #ffffff;
+  --color-code-foreground: #24292f;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #1e1e1e;
+  --color-code-foreground: #b59b7d;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #1e1e1e;
+  --color-code-foreground: #b59b7d;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SymX docs</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/symx250.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">SymX docs</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Compilation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/compilation.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="compilation">
+<h1>Compilation<a class="headerlink" href="#compilation" title="Link to this heading">¶</a></h1>
+<p>Once you have some expressions you want to evaluate efficiently (and probably many times), the next step is to compile them.
+This is done very easily by SymX and it typically follows these steps:</p>
+<ol class="arabic simple">
+<li><p>Optionally, generate a checksum for the expression(s).</p></li>
+<li><p>Check if the compiled object already exists in the codegen folder by matching name, IO and checksum.</p></li>
+<li><p>If it does not exists, SymX will generate a source <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file with a function <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">f(double*</span> <span class="pre">in,</span> <span class="pre">double*</span> <span class="pre">out)</span></code>.</p></li>
+<li><p>SymX will use <em>your</em> compiler to generate a <code class="docutils literal notranslate"><span class="pre">.so</span></code> (non-Windows) or <code class="docutils literal notranslate"><span class="pre">.dll</span></code> (Windows) from the source file.</p></li>
+<li><p>SymX will load the compiled function and make it ready to be used.</p></li>
+</ol>
+<p>This process always occurs at <em>runtime</em>.
+SymX differentiation, code generation and compilation is typically very fast for most expressions (less than one second).
+In any case, using the checksum system will skip steps 3 and 4, further reducing setup times.</p>
+<section id="setting-up-the-compiler">
+<h2>Setting up the compiler<a class="headerlink" href="#setting-up-the-compiler" title="Link to this heading">¶</a></h2>
+<p>See Section <a class="reference internal" href="setup.html"><span class="std std-doc">Setup</span></a> to learn how to point SymX to your compiler.</p>
+</section>
+<section id="compiled">
+<h2><code class="docutils literal notranslate"><span class="pre">Compiled</span></code><a class="headerlink" href="#compiled" title="Link to this heading">¶</a></h2>
+<p>The lowest-level user-facing compilation component in SymX is <code class="docutils literal notranslate"><span class="pre">Compiled</span></code>.
+It lets you compile any list of symbolic expressions in any <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> type.
+With <code class="docutils literal notranslate"><span class="pre">Compiled</span></code>, you are responsible to set the numeric values of each symbol and to gather the output.
+Here is a simple example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">Workspace</span><span class="w"> </span><span class="n">ws</span><span class="p">;</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_scalar</span><span class="p">();</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_scalar</span><span class="p">();</span>
+
+<span class="c1">// Define expressions</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nf">sin</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">df_dx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+
+<span class="c1">// Get default (or CMake specified) codegen dir</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">string</span><span class="w"> </span><span class="n">codegen_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">get_codegen_dir</span><span class="p">();</span>
+
+<span class="c1">// Get the checksum of the whole Workspace</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">string</span><span class="w"> </span><span class="n">checksum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">get_checksum</span><span class="p">();</span>
+
+<span class="c1">// Compile both f and its derivative using `double`</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">compiled</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+
+<span class="c1">// Set values</span>
+<span class="n">compiled</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
+<span class="n">compiled</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">);</span>
+
+<span class="c1">// Run compiled function</span>
+<span class="nc">View</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+
+<span class="c1">// Print result  (output: &quot;f = 1.9093 | df_dx = 2&quot;)</span>
+<span class="nc">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;f = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot; | df_dx = &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">View</span></code> is a thin pointer+length type of wrapper that contains the output of the compiled SymX function.
+Under the hood, the function generated in <code class="docutils literal notranslate"><span class="pre">&lt;codegen_dir&gt;/my_function.cpp</span></code> is:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">EXPORT</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">my_function</span><span class="p">(</span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">in</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">out</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cm">/*</span>
+<span class="cm">        Add: 	2</span>
+<span class="cm">        Mul: 	1</span>
+<span class="cm">        Sin: 	1</span>
+<span class="cm">        Total: 	4</span>
+<span class="cm">    */</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">v2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">v3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="nf">sin</span><span class="p">(</span><span class="n">in</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">v4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">v3</span><span class="p">;</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v4</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">v6</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v6</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="constructors">
+<h3>Constructors<a class="headerlink" href="#constructors" title="Link to this heading">¶</a></h3>
+<p>You can be more specific on what exactly <code class="docutils literal notranslate"><span class="pre">Compiled</span></code> should do by initializing it empty and then using one of the following methods:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">compiled</span><span class="p">;</span>
+
+<span class="c1">// Forces compilation</span>
+<span class="n">compiled</span><span class="p">.</span><span class="nf">compile</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+
+<span class="c1">// Try loading</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">load_if_cached</span><span class="p">(</span><span class="s">&quot;my_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+
+<span class="c1">// Try loading otherwise compile (this is the default constructor)</span>
+<span class="n">compiled</span><span class="p">.</span><span class="nf">try_load_otherwise_compile</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>A “cached” compiled object that can be loaded, avoiding re-compilation, is one such that:</p>
+<ul class="simple">
+<li><p>An actual <code class="docutils literal notranslate"><span class="pre">.so</span></code> or <code class="docutils literal notranslate"><span class="pre">.dll</span></code> file with the same name exists in the compilation folder.</p></li>
+<li><p>The number of function inputs and outputs match.</p></li>
+<li><p>The compilation <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> type matches.</p></li>
+<li><p>The checksum matches.</p></li>
+</ul>
+</section>
+<section id="status">
+<h3>Status<a class="headerlink" href="#status" title="Link to this heading">¶</a></h3>
+<p>You can check the status of the compilation process with</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">valid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">is_valid</span><span class="p">();</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">cached</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">was_cached</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+<span class="nc">Compilation</span><span class="o">::</span><span class="nc">Info</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">get_compilation_info</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">info.print()</span></code> will produce a report like this one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Number</span> <span class="n">of</span> <span class="n">inputs</span><span class="p">:</span>             <span class="mi">2</span>
+<span class="n">Number</span> <span class="n">of</span> <span class="n">outputs</span><span class="p">:</span>            <span class="mi">2</span>
+<span class="n">Compiled</span> <span class="nb">float</span> <span class="nb">type</span><span class="p">:</span>          <span class="n">double</span>
+<span class="n">Was</span> <span class="n">cached</span><span class="p">:</span>                   <span class="n">No</span>
+<span class="n">Runtime</span> <span class="n">code</span> <span class="n">generation</span> <span class="p">(</span><span class="n">s</span><span class="p">):</span>  <span class="mf">7.531e-05</span>
+<span class="n">Runtime</span> <span class="n">compilation</span> <span class="p">(</span><span class="n">s</span><span class="p">):</span>      <span class="mf">0.14319</span>
+<span class="n">Number</span> <span class="n">of</span> <span class="nb">bytes</span> <span class="k">for</span> <span class="n">symbols</span><span class="p">:</span>  <span class="mi">144</span> <span class="nb">bytes</span>
+</pre></div>
+</div>
+</section>
+<section id="compilation-float-types">
+<h3>Compilation <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> types<a class="headerlink" href="#compilation-float-types" title="Link to this heading">¶</a></h3>
+<p>Currently, SymX supports the following SIMD types:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">compiled</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function_double&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">float</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">compiled</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function_float&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="nc">__m256d</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">compiled</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function_simd4d&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="n">__m256</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">compiled</span><span class="p">({</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">df_dx</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;my_function_simd8f&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note that you will need to set values of type <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> and that the result will be returned as <code class="docutils literal notranslate"><span class="pre">View&lt;FLOAT&gt;</span></code>.
+If your system does not support these SIMD types, set SymX’s the CMake flag <code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_AVX2</span></code> to <code class="docutils literal notranslate"><span class="pre">OFF</span></code>.</p>
+</section>
+<section id="parallel-evaluation">
+<h3>Parallel evaluation<a class="headerlink" href="#parallel-evaluation" title="Link to this heading">¶</a></h3>
+<p>You can evaluate a <code class="docutils literal notranslate"><span class="pre">Compiled</span></code> expression in parallel in the following way:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Specify the number of concurrent buffers you need</span>
+<span class="n">compiled</span><span class="p">.</span><span class="nf">set_n_threads</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+
+<span class="c1">// Parallel loop</span>
+<span class="cp">#pragma omp parallel for schedule(static) num_threads(n_threads)</span>
+<span class="kr">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="c1">// Set values thread-safe</span>
+<span class="w">    </span><span class="n">compiled</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">);</span>
+<span class="w">    </span><span class="n">compiled</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="mf">2.0</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Evaluate thread-safe</span>
+<span class="w">    </span><span class="nc">View</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="p">.</span><span class="nf">run</span><span class="p">(</span><span class="n">tid</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// ... use result ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="fem-example">
+<h2>FEM Example<a class="headerlink" href="#fem-example" title="Link to this heading">¶</a></h2>
+<p>Let’s revisit the Tet4 NeoHookean example.
+The energy for a Tet4 was defined like this:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// SymX workspace</span>
+<span class="nc">Workspace</span><span class="w"> </span><span class="n">ws</span><span class="p">;</span>
+
+<span class="c1">// Create symbols</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_vectors</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X_rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_vectors</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_scalar</span><span class="p">();</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">make_scalar</span><span class="p">();</span>
+
+<span class="c1">// FEM potential</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">Jx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">jac_tet4</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">JX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">jac_tet4</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span><span class="w"> </span><span class="n">X_rest</span><span class="p">);</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">F</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Jx</span><span class="o">*</span><span class="n">JX</span><span class="p">.</span><span class="nf">inv</span><span class="p">();</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">JX</span><span class="p">.</span><span class="nf">det</span><span class="p">()</span><span class="o">/</span><span class="mf">6.0</span><span class="p">;</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">E</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vol</span><span class="o">*</span><span class="nf">neohookean_energy_density</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">lambda</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Compilation<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Let’s use the checksum system to avoid differentiation altogether.
+If the energy definition and the degrees of freedom are the same, clearly the derivatives must also be the same.
+If a compiled object already exist with the same name, IO, compilation type and checksum, then we know that it is safe to load it, even though we skipped differentiation.
+SymX actually does this automatically in its high-level infrastructure that we will explore later.</p>
+<p>Here is how it can be done:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// DoFs</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Scalar</span><span class="o">&gt;</span><span class="w"> </span><span class="n">dofs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">collect_scalars</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+
+<span class="c1">// Checksum (entire WS + dofs)</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">string</span><span class="w"> </span><span class="n">checksum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ws</span><span class="p">.</span><span class="nf">get_checksum</span><span class="p">();</span>
+<span class="kr">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="nc">Scalar</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">dofs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">checksum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">s</span><span class="p">.</span><span class="nf">get_checksum</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="c1">// Create empty Compiled</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c_grad</span><span class="p">;</span>
+<span class="nc">Compiled</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">c_hess</span><span class="p">;</span>
+
+<span class="c1">// Try loading</span>
+<span class="n">c_grad</span><span class="p">.</span><span class="nf">load_if_cached</span><span class="p">(</span><span class="s">&quot;NH_grad&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="n">c_hess</span><span class="p">.</span><span class="nf">load_if_cached</span><span class="p">(</span><span class="s">&quot;NH_hess&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+
+<span class="c1">// Can&#39;t load, must compile</span>
+<span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">c_grad</span><span class="p">.</span><span class="nf">was_cached</span><span class="p">()</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">c_hess</span><span class="p">.</span><span class="nf">was_cached</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="c1">// Differentiation</span>
+<span class="w">    </span><span class="nc">DiffCache</span><span class="w"> </span><span class="n">diff_cache</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">Vector</span><span class="w"> </span><span class="n">grad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">gradient</span><span class="p">(</span><span class="n">E</span><span class="p">,</span><span class="w"> </span><span class="n">dofs</span><span class="p">,</span><span class="w"> </span><span class="n">diff_cache</span><span class="p">);</span>
+<span class="w">    </span><span class="nc">Matrix</span><span class="w"> </span><span class="n">hess</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">gradient</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span><span class="w"> </span><span class="n">dofs</span><span class="p">,</span><span class="w"> </span><span class="cm">/* is_symmetric = */</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">diff_cache</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Compilation</span>
+<span class="w">    </span><span class="n">c_grad</span><span class="p">.</span><span class="nf">compile</span><span class="p">(</span><span class="n">grad</span><span class="p">.</span><span class="nf">values</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;NH_grad&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="w">    </span><span class="n">c_hess</span><span class="p">.</span><span class="nf">compile</span><span class="p">(</span><span class="n">hess</span><span class="p">.</span><span class="nf">values</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;NH_hess&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In a Fedora 43 system equipped with an AMD Ryzen 9 5900X 12 core CPU and using gcc, the following report is obtained when the compiled Hessian is not found:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Number</span> <span class="n">of</span> <span class="n">inputs</span><span class="p">:</span>             <span class="mi">26</span>
+<span class="n">Number</span> <span class="n">of</span> <span class="n">outputs</span><span class="p">:</span>            <span class="mi">144</span>
+<span class="n">Compiled</span> <span class="nb">float</span> <span class="nb">type</span><span class="p">:</span>          <span class="n">double</span>
+<span class="n">Was</span> <span class="n">cached</span><span class="p">:</span>                   <span class="n">No</span>
+<span class="n">Runtime</span> <span class="n">code</span> <span class="n">generation</span> <span class="p">(</span><span class="n">s</span><span class="p">):</span>  <span class="mf">0.000605155</span>
+<span class="n">Runtime</span> <span class="n">compilation</span> <span class="p">(</span><span class="n">s</span><span class="p">):</span>      <span class="mf">0.327939</span>
+<span class="n">Number</span> <span class="n">of</span> <span class="nb">bytes</span> <span class="k">for</span> <span class="n">symbols</span><span class="p">:</span>  <span class="mi">33632</span> <span class="nb">bytes</span>
+</pre></div>
+</div>
+<p>The differentiation runtime for the Hessian was 0.37 ms.
+While in this example differentiation does not amount to much, for more complex expressions it can be noticeable.
+Therefore, in general avoiding the step when unnecessary is a good practice.
+When the compiled function exist, the setup phase is sub-millisecond.</p>
+<p>It is worth highlighting that SymX is very fast differentiating and generating code, far faster than compilation which is typically the bottleneck.
+While the gradient and Hessian of a Tet4 NeoHookean potential is not extremely complex, it is far from trivial.
+Differentiation, code generation and compilation all together stays below one second preparation time.
+SymX is designed to be used in far more complex expressions, such as high-order FEM and shell mechanics, and having fast setup times is important.</p>
+</section>
+<section id="evaluation">
+<h3>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">¶</a></h3>
+<p>The generated code to evaluate the Hessian has a total of 1833 floating point operations.
+We can evaluate the function for specific inputs by setting numeric values for the different symbols:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">Vector3d</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">Vector3d</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X_rest</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">lambda</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+
+<span class="c1">// ... fill data ...</span>
+
+<span class="c1">// Set values</span>
+<span class="kr">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">v</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">c_hess</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">v</span><span class="p">],</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">x</span><span class="p">[</span><span class="n">v</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">c_hess</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">X_rest</span><span class="p">[</span><span class="n">v</span><span class="p">],</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">X_rest</span><span class="p">[</span><span class="n">v</span><span class="p">]);</span>
+<span class="p">}</span>
+<span class="n">c_hess</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">lambda</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">lambda</span><span class="p">);</span>
+<span class="n">c_hess</span><span class="p">.</span><span class="nf">set</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">.</span><span class="n">mu</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>And then we can finally evaluate and print the result:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Evaluate</span>
+<span class="nc">View</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c_hess</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+
+<span class="c1">// Print</span>
+<span class="nc">Eigen</span><span class="o">::</span><span class="nc">Matrix</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="o">&gt;</span><span class="w"> </span><span class="n">h</span><span class="p">;</span>
+<span class="kr">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kr">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nf">h</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">[</span><span class="mi">12</span><span class="o">*</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="nc">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Hessian = </span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">h</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>which for mild irregular compression outputs</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Hessian</span> <span class="o">=</span> 
+  <span class="mi">267748</span>  <span class="mf">94670.8</span>  <span class="mf">94670.8</span>  <span class="o">-</span><span class="mi">152363</span> <span class="o">-</span><span class="mf">24574.7</span> <span class="o">-</span><span class="mf">24574.7</span> <span class="o">-</span><span class="mf">57692.3</span> <span class="o">-</span><span class="mf">70096.2</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">70096.2</span>
+ <span class="mf">94670.8</span>   <span class="mi">267748</span>  <span class="mf">94670.8</span> <span class="o">-</span><span class="mf">70096.2</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">24574.7</span>  <span class="o">-</span><span class="mi">152363</span> <span class="o">-</span><span class="mf">24574.7</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">57692.3</span> <span class="o">-</span><span class="mf">70096.2</span>
+ <span class="mf">94670.8</span>  <span class="mf">94670.8</span>   <span class="mi">267748</span> <span class="o">-</span><span class="mf">70096.2</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">70096.2</span> <span class="o">-</span><span class="mf">57692.3</span> <span class="o">-</span><span class="mf">24574.7</span> <span class="o">-</span><span class="mf">24574.7</span>  <span class="o">-</span><span class="mi">152363</span>
+ <span class="o">-</span><span class="mi">152363</span> <span class="o">-</span><span class="mf">70096.2</span> <span class="o">-</span><span class="mf">70096.2</span>   <span class="mi">152363</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">70096.2</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">70096.2</span>
+<span class="o">-</span><span class="mf">24574.7</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>
+<span class="o">-</span><span class="mf">24574.7</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>
+<span class="o">-</span><span class="mf">57692.3</span> <span class="o">-</span><span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>
+<span class="o">-</span><span class="mf">70096.2</span>  <span class="o">-</span><span class="mi">152363</span> <span class="o">-</span><span class="mf">70096.2</span>  <span class="mf">70096.2</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>   <span class="mi">152363</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">70096.2</span>
+       <span class="mi">0</span> <span class="o">-</span><span class="mf">24574.7</span> <span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>
+<span class="o">-</span><span class="mf">57692.3</span>        <span class="mi">0</span> <span class="o">-</span><span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>        <span class="mi">0</span>
+       <span class="mi">0</span> <span class="o">-</span><span class="mf">57692.3</span> <span class="o">-</span><span class="mf">24574.7</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">24574.7</span>        <span class="mi">0</span>  <span class="mf">57692.3</span>        <span class="mi">0</span>
+<span class="o">-</span><span class="mf">70096.2</span> <span class="o">-</span><span class="mf">70096.2</span>  <span class="o">-</span><span class="mi">152363</span>  <span class="mf">70096.2</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>  <span class="mf">70096.2</span>        <span class="mi">0</span>        <span class="mi">0</span>        <span class="mi">0</span>   <span class="mi">152363</span>
+</pre></div>
+</div>
+</section>
+<section id="benchmark">
+<h3>Benchmark<a class="headerlink" href="#benchmark" title="Link to this heading">¶</a></h3>
+<p>We use the Tet4 NeoHookean energy to run a benchmark in order to compare evaluation times for different compilation types and number of threads.
+In the aforementioned AMD machine, we obtain</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Compilation type</p></th>
+<th class="head text-right"><p>Runtime (1 thread)</p></th>
+<th class="head text-right"><p>Runtime (12 threads)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">double</span></code></p></td>
+<td class="text-right"><p>204.886</p></td>
+<td class="text-right"><p>20.142</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td class="text-right"><p>187.891</p></td>
+<td class="text-right"><p>19.091</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SIMD4d</span></code></p></td>
+<td class="text-right"><p>54.051</p></td>
+<td class="text-right"><p>6.354</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SIMD8f</span></code></p></td>
+<td class="text-right"><p>29.838</p></td>
+<td class="text-right"><p>4.024</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Runtimes in nanoseconds.
+SIMD times reflect the wall time divided by the number of scalars in the SIMD width.
+Note that this benchmark evaluates a single element, thus it is not representative of full-assembly pipelines which are often slowdown by memory traffic.
+In any case, it is established that SymX provides great performance and great hardware scalability for almost-zero user involvement.
+This benchmark can be found in <a class="reference download internal" download="" href="_downloads/9b15a505bfb69284c646feebddc002d5/NeoHookean.cpp"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">NeoHookean.cpp</span></code></span></a>.</p>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="symbol_data.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Symbol-Data Overview</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="api_scalar_vector_matrix.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Symbol Reference API</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Jose Antonio Fernandez-Fernandez
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Compilation</a><ul>
+<li><a class="reference internal" href="#setting-up-the-compiler">Setting up the compiler</a></li>
+<li><a class="reference internal" href="#compiled"><code class="docutils literal notranslate"><span class="pre">Compiled</span></code></a><ul>
+<li><a class="reference internal" href="#constructors">Constructors</a></li>
+<li><a class="reference internal" href="#status">Status</a></li>
+<li><a class="reference internal" href="#compilation-float-types">Compilation <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> types</a></li>
+<li><a class="reference internal" href="#parallel-evaluation">Parallel evaluation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fem-example">FEM Example</a><ul>
+<li><a class="reference internal" href="#id1">Compilation</a></li>
+<li><a class="reference internal" href="#evaluation">Evaluation</a></li>
+<li><a class="reference internal" href="#benchmark">Benchmark</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

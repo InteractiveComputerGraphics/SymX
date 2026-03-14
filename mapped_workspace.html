@@ -1,0 +1,604 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Loops" href="compiled_in_loop.html"><link rel="prev" title="Symbol-Data Overview" href="symbol_data.html">
+        <link rel="prefetch" href="_static/symx250.png" as="image">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
+        <title>Symbol-Data Maps - SymX docs</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=51155216" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #ffffff;
+  --color-code-foreground: #24292f;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #1e1e1e;
+  --color-code-foreground: #b59b7d;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #1e1e1e;
+  --color-code-foreground: #b59b7d;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">SymX docs</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/symx250.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">SymX docs</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/mapped_workspace.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="symbol-data-maps">
+<h1>Symbol-Data Maps<a class="headerlink" href="#symbol-data-maps" title="Link to this heading">¶</a></h1>
+<p>We want SymX to create symbols that represent the actual data we have: the vertices of a mesh, material parametrization, etc.
+We can do this directly with <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code>: instead of first creating symbols with <code class="docutils literal notranslate"><span class="pre">Workspace</span></code> and then setting numerical values, <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> creates symbols that represent data in user’s containers.
+Then, at evaluation time, SymX knows exactly which numeric value to fetch for each symbol.</p>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
+<p>Let’s first take a look at an example where we define an expression to evaluate the area of a triangle in a mesh using <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">Vector3d</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vertices</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">triangles</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+
+<span class="c1">// Create MappedWorkspace</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">triangles</span><span class="p">);</span>
+
+<span class="c1">// Spawn symbols from data</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_vectors</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">vertices</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">);</span>
+
+<span class="c1">// Expression</span>
+<span class="nc">Vector</span><span class="w"> </span><span class="n">cross</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]).</span><span class="nf">cross3</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="o">*</span><span class="n">cross</span><span class="p">.</span><span class="nf">norm</span><span class="p">();</span>
+
+<span class="c1">// ... downstream ...</span>
+</pre></div>
+</div>
+<p>As shown, symbols are no longer standalone — they are created from the <code class="docutils literal notranslate"><span class="pre">vertices</span></code> array.
+Also, <code class="docutils literal notranslate"><span class="pre">triangles</span></code>, is the <strong>connectivity array</strong> defines the loop and how to index the data arrays in each iteration.</p>
+</section>
+<section id="the-mappedworkspace">
+<h2>The <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code><a class="headerlink" href="#the-mappedworkspace" title="Link to this heading">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> binds a symbolic <code class="docutils literal notranslate"><span class="pre">Workspace</span></code> to actual data for loop-based evaluation.</p>
+<section id="connectivity">
+<h3>Connectivity<a class="headerlink" href="#connectivity" title="Link to this heading">¶</a></h3>
+<p>The first thing we need to define is the <strong>connectivity</strong> array that defines the length of the loop, as well as each instance and provides indices for data fetching.
+Let’s say we as users have a triangle mesh with the following connectivity:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">triangles</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Then, we can create the <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> like this:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">triangles</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Where the first return is of type <code class="docutils literal notranslate"><span class="pre">std::shared_ptr&lt;MappedWorkspace&lt;double&gt;&gt;</span></code> and the second one is of type <code class="docutils literal notranslate"><span class="pre">Element</span></code>.
+The former is the new workspace itself, that will be used to create symbols and hold the mappings to actual data arrays.
+The latter is simply a “symbolic representation” of an element in the connectivity array.
+It is simply used to index the actual data arrays in the same way we would do <code class="docutils literal notranslate"><span class="pre">triangles[tri_i][vertex_j]</span></code>.</p>
+<p>Let’s clarify a few things about connectivities:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> cannot exist without connectivity.</p></li>
+<li><p>SymX holds a reference to <code class="docutils literal notranslate"><span class="pre">triangles</span></code>. If it is resized (e.g. mesh refinement), it will be correctly accounted for. This is a key feature.</p></li>
+<li><p>Connectivity <strong>can</strong> be initialized (and used) empty. You can initialize your SymX-based solver before the user declares entities, as long as the data containers themselves exist.</p></li>
+<li><p>SymX always expect contiguous data arrays in row major order.</p></li>
+<li><p>SymX only supports fixed-stride connectivities. Dynamic per-entry strides (e.g. SPH) is not allowed in this form.</p></li>
+<li><p>If you <em>move</em> or generally invalidate the reference, SymX will produce undefined behavior. This also holds for the data arrays.</p></li>
+</ul>
+<section id="connectivity-array-lambdas">
+<h4>Connectivity Array Lambdas<a class="headerlink" href="#connectivity-array-lambdas" title="Link to this heading">¶</a></h4>
+<p>Albeit low-level, it is important to know what exactly SymX holds from the user’s connectivity:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">ConnectivityMap</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">int32_t</span><span class="o">*</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">// Lambda to obtain pointer to the beginning</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">n_elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w">  </span><span class="c1">// Lambda to obtain current number of elements (e.g. triangles)</span>
+<span class="w">    </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">                            </span><span class="c1">// Stride in the array (e.g. 3 for triangles, 4 for quads)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These lambda functions allow SymX to always get updated sizes and valid pointers to data, even after resizing or clearing the container.</p>
+</section>
+<section id="connectivity-array-types">
+<h4>Connectivity Array Types<a class="headerlink" href="#connectivity-array-types" title="Link to this heading">¶</a></h4>
+<p>SymX supports other types for connectivity beyond <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::array&lt;int,</span> <span class="pre">3&gt;&gt;</span></code>.
+In fact, the interface is templated to be very flexible since it just needs fill those generic lambdas.
+The following are valid initializations for our example:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">triangles_flat</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">triangles_flat</span><span class="p">,</span><span class="w"> </span><span class="n">stride</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">Matrix</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="nc">Eigen</span><span class="o">::</span><span class="n">Dynamic</span><span class="p">,</span><span class="w"> </span><span class="nc">Eigen</span><span class="o">::</span><span class="n">Dynamic</span><span class="p">,</span><span class="w"> </span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">RowMajor</span><span class="o">&gt;</span><span class="w"> </span><span class="n">triangles</span><span class="p">;</span>
+<span class="n">triangles</span><span class="p">.</span><span class="nf">resize</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">triangles</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Note that it’s very important to use <code class="docutils literal notranslate"><span class="pre">RowMajor</span></code> and specify the number of columns for Eigen types, even when empty.</p>
+<p>Further, you can directly pass the lambdas if your connectivity container does not match any of the available types:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">triangles</span><span class="p">;</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span>
+<span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="n">triangles</span><span class="p">](){</span><span class="w"> </span><span class="kr">return</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="p">)</span><span class="n">triangles</span><span class="p">.</span><span class="nf">data</span><span class="p">();</span><span class="w"> </span><span class="p">},</span><span class="w">  </span><span class="c1">// ptr to data</span>
+<span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="n">triangles</span><span class="p">](){</span><span class="w"> </span><span class="kr">return</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">triangles</span><span class="p">.</span><span class="nf">size</span><span class="p">();</span><span class="w"> </span><span class="p">},</span><span class="w">         </span><span class="c1">// number of elements</span>
+<span class="w">    </span><span class="mi">3</span><span class="w">                                                        </span><span class="c1">// stride</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<p>Finally, SymX provides a convenient connectivity type (optional to use), <code class="docutils literal notranslate"><span class="pre">LabelledConnectivity</span></code>, that allows <code class="docutils literal notranslate"><span class="pre">string</span></code> labels to each entry in the stencil:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">LabelledConnectivity</span><span class="o">&lt;</span><span class="mi">3</span><span class="o">&gt;</span><span class="w"> </span><span class="n">triangles</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="s">&quot;v0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v2&quot;</span><span class="w"> </span><span class="p">}};</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">triangles</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Internally, <code class="docutils literal notranslate"><span class="pre">LabelledConnectivity&lt;N&gt;</span></code> is just <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::array&lt;int,</span> <span class="pre">N&gt;&gt;</span></code> plus <code class="docutils literal notranslate"><span class="pre">std::array&lt;std::string,</span> <span class="pre">N&gt;</span></code> to identify each entry.
+These labels are now available as indices, e.g. <code class="docutils literal notranslate"><span class="pre">element[&quot;v0&quot;]</span></code> instead of the pure numeric default.
+While not really necessary for a triangle, they are very useful for more complex stencils such as point-triangle contact between two rigid bodies:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">LabelledConnectivity</span><span class="o">&lt;</span><span class="mi">6</span><span class="o">&gt;</span><span class="w"> </span><span class="n">rb_point_triangle_contact</span><span class="p">{</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="s">&quot;rb_a&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;rb_b&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;p&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v2&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="symbols">
+<h3>Symbols<a class="headerlink" href="#symbols" title="Link to this heading">¶</a></h3>
+<p>Similarly to connectivity, SymX keeps lambda functions to access updated references to the user’s data.
+Specifically:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">DataMap</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="kt">uintptr_t</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w">  </span><span class="c1">// Unique identifier: address of the data source container (e.g. &amp;std::vector, &amp;Eigen::Matrix). Used for identity checks.</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">// Lambda to obtain pointer to the beginning of data</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">n_elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">// Lambda to obtain current number of elements (e.g. vertices)</span>
+<span class="w">    </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">                           </span><span class="c1">// Stride in the array (e.g. 3 for 3D vectors)</span>
+<span class="w">    </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">connectivity_index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">               </span><span class="c1">// Entry idx in the connectivity array the symbol is associated with. -1 for no connectivity (fixed) values</span>
+<span class="w">    </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">first_symbol_idx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w">                 </span><span class="c1">// Location of the first symbol in the workspace&#39;s symbols array.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>While this is not something the user needs to work with, it helps to understand how SymX works internally in order to access the user’s data.
+The entries are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: Pointer to the container. This is used in high level abstraction to match symbols, e.g. for DoF identification.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code>: Pointer to the beginning of the data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_elements</span></code>: Number of elements/”rows” in the data array.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stride</span></code>: Number of entries per element or “columns” in the data array.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">connectivity_index</span></code>: Stencil index associated with this symbol (e.g. <code class="docutils literal notranslate"><span class="pre">vertices[tri[2]]</span></code> -&gt; 2)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">first_symbol_idx</span></code>: Index of the first symbol associated with this array.</p></li>
+</ul>
+<p>This will be populated automatically for supported container types such as <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Eigen::Vector&lt;&gt;&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::array&lt;&gt;&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">std::vector&lt;&gt;</span></code>, etc.</p>
+<section id="symbols-creation">
+<h4>Symbols Creation<a class="headerlink" href="#symbols-creation" title="Link to this heading">¶</a></h4>
+<p>Just like in <code class="docutils literal notranslate"><span class="pre">Workspace</span></code>, we can create <code class="docutils literal notranslate"><span class="pre">Scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">Vector</span></code> and <code class="docutils literal notranslate"><span class="pre">Matrix</span></code> from <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code>.
+The only difference is that now we need to specify an actual data array (and optionally indexing) upon creation:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Creates a constant Scalar</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_scalar</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">a</span><span class="p">);</span>
+
+<span class="c1">// Create a scalar indexed from array `data.v` using `tet[0]` index</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_scalar</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">tet</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+<span class="c1">// Creates multiple Vector bound to `data.vs` indexed with all entries in `tet`</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_vectors</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">vs</span><span class="p">,</span><span class="w"> </span><span class="n">tet</span><span class="p">);</span>
+
+<span class="c1">// Creates a Matrix from `data.m` indexed by `tet[1]`</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_matrix</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">tet</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</pre></div>
+</div>
+<p>Further, symbols can be created by explicitly passing the required lambdas for the cases where the user’s data container is not recognized by SymX:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">Vector</span><span class="w"> </span><span class="nf">MappedWorkspace::make_vector</span><span class="p">(</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="kt">uintptr_t</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="k">const</span><span class="w"> </span><span class="n">FLOAT</span><span class="o">*</span><span class="w"> </span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">int32_t</span><span class="p">()</span><span class="o">&gt;</span><span class="w"> </span><span class="n">n_elements</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int32_t</span><span class="w"> </span><span class="n">stride</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="nc">Index</span><span class="o">&amp;</span><span class="w"> </span><span class="n">idx</span>
+<span class="w">    </span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="summation">
+<h4>Summation<a class="headerlink" href="#summation" title="Link to this heading">¶</a></h4>
+<p>A common operation in many numerical codes is summation, a nested small loop that needs to be evaluated for each element.
+A typical use case for summations is FEM numerical integration.
+The total evaluation for the loop takes the form:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+P = \sum_e^{n_e} \sum_i^{n_i} E(\mathrm x_e, \mathrm p_i)
+\]</div>
+</div>
+<p>where <span class="math notranslate nohighlight">\(P\)</span> is the total potential, <span class="math notranslate nohighlight">\(E\)</span> is the element potential, <span class="math notranslate nohighlight">\(n_e\)</span> is the number of elements, <span class="math notranslate nohighlight">\(n_i\)</span> is the length of the summation loop, <span class="math notranslate nohighlight">\(\mathrm x_e\)</span> is the element-specific input and <span class="math notranslate nohighlight">\(\mathrm p_i\)</span> is the summation input.
+In the inner loop, <span class="math notranslate nohighlight">\(\mathrm x_e\)</span> is constant; the summation occurs for different values of <span class="math notranslate nohighlight">\(\mathrm p_i\)</span>.</p>
+<p>SymX fully supports this logic, including differentiation, CSE, SIMD vectorization, parallelism, etc.
+We can indicate summation in SymX using <code class="docutils literal notranslate"><span class="pre">MappedWorkspace::add_for_each()</span></code>, which takes a fixed summation array and a lambda function.
+For illustration, this is how the summation of the Lagrange Tet10 element can be written in SymX:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">integration_rule_tet10</span><span class="w"> </span><span class="o">=</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">0.041666667</span><span class="p">,</span><span class="w"> </span><span class="mf">0.58541020</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">0.041666667</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.58541020</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">0.041666667</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.58541020</span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="mf">0.041666667</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">,</span><span class="w"> </span><span class="mf">0.13819660</span><span class="p">}</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">add_for_each</span><span class="p">(</span><span class="n">integration_rule_tet10</span><span class="p">,</span>
+<span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="nc">Vector</span><span class="o">&amp;</span><span class="w"> </span><span class="n">ip</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nc">Scalar</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ip</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">        </span><span class="nc">Vector</span><span class="w"> </span><span class="n">xi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Vector</span><span class="p">({</span><span class="w"> </span><span class="n">ip</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="n">ip</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="n">ip</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="p">});</span>
+<span class="w">        </span><span class="kr">return</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span><span class="o">*</span><span class="n">w</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="fem-example">
+<h2>FEM Example<a class="headerlink" href="#fem-example" title="Link to this heading">¶</a></h2>
+<p>Let’s use a bit more complex FEM example to showcase several options to create indexed symbols from data arrays.
+Consider a single connectivity array representing several concatenated Tet4 meshes where the NeoHookean elastic energy is defined.
+Each element has <code class="docutils literal notranslate"><span class="pre">group_idx</span></code> (indicating which mesh it belongs to) and <code class="docutils literal notranslate"><span class="pre">elem_idx</span></code> (indicating the global element index).
+The first Lamé parameter (lambda) is defined per group, the second (mu) is a global constant.
+Finally, the rest element volume and inverse jacobian is precomputed as they are constant per element.
+We can represent the simulation data as such:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">LabelledConnectivity</span><span class="o">&lt;</span><span class="mi">6</span><span class="o">&gt;</span><span class="w"> </span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="w"> </span><span class="s">&quot;elem_idx&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;group_idx&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v0&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v2&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;v3&quot;</span><span class="w"> </span><span class="p">}};</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">Vector3d</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vertices</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">group_lambda</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">mu</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">array</span><span class="o">&lt;</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">elem_inv_rest_jacobian</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This is how we conveniently define the potential over the entire mesh on these custom rules and user structures using SymX:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Create MappedWorkspace</span>
+<span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">conn</span><span class="p">);</span>
+
+<span class="c1">// Shorthand for Tet4 indices</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Index</span><span class="o">&gt;</span><span class="w"> </span><span class="n">tet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element</span><span class="p">.</span><span class="nf">slice</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">);</span>
+
+<span class="c1">// Create symbols from data</span>
+<span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Vector</span><span class="o">&gt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_vectors</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span><span class="w"> </span><span class="n">tet</span><span class="p">);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">lambda</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_scalar</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">group_lambda</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">[</span><span class="s">&quot;group_idx&quot;</span><span class="p">]);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_scalar</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">mu</span><span class="p">);</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">rest_vol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_scalar</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">rest_vol</span><span class="p">,</span><span class="w"> </span><span class="n">element</span><span class="p">[</span><span class="s">&quot;elem_idx&quot;</span><span class="p">]);</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">JX_inv</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mws</span><span class="o">-&gt;</span><span class="nf">make_matrix</span><span class="p">(</span><span class="n">data</span><span class="p">.</span><span class="n">elem_inv_rest_jacobian</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">element</span><span class="p">[</span><span class="s">&quot;elem_idx&quot;</span><span class="p">]);</span>
+
+<span class="c1">// FEM potential</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">Jx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">jac_tet4</span><span class="p">(</span><span class="n">x</span><span class="p">);</span>
+<span class="nc">Matrix</span><span class="w"> </span><span class="n">F</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Jx</span><span class="o">*</span><span class="n">JX_inv</span><span class="p">;</span>
+<span class="nc">Scalar</span><span class="w"> </span><span class="n">E</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rest_vol</span><span class="o">*</span><span class="nf">neohookean_energy_density</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="w"> </span><span class="n">lambda</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">);</span>
+
+<span class="c1">// ... downstream ...</span>
+</pre></div>
+</div>
+<p>Highlights:</p>
+<ul class="simple">
+<li><p>We can slice and index <code class="docutils literal notranslate"><span class="pre">Element</span></code> for more convenient indexing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LabelledConnectivity</span></code> makes the mapping readable thanks to indexing by label as opposed to an unlabelled <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::array&lt;int,</span> <span class="pre">6&gt;&gt;</span></code>.</p></li>
+<li><p>We can make multiple scalars, vectors and matrices in a single <code class="docutils literal notranslate"><span class="pre">make_</span></code> call if multiple indices (or the whole <code class="docutils literal notranslate"><span class="pre">Element</span></code>) are passed.</p></li>
+<li><p>Global (non-indexed) symbols can be created by simply not passing an index. Applies to <code class="docutils literal notranslate"><span class="pre">Scalar</span></code>, <code class="docutils literal notranslate"><span class="pre">Vector</span></code> and <code class="docutils literal notranslate"><span class="pre">Matrix</span></code>.</p></li>
+<li><p>We recommend to <strong>not</strong> use <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Eigen::Matrix&lt;&gt;&gt;</span></code> (e.g. 3x3 matrix) due to potential issues with padding.
+Instead, prefer <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::array&lt;double,</span> <span class="pre">N*N&gt;&gt;</span></code> to guarantee data continuity.</p></li>
+</ul>
+<p>Finally, as we move higher in the abstraction hierarchy, it is important to remark that mappings and definitions are <strong>not</strong> executed at evaluation time.
+The SymX snippets shown here are run <strong>once</strong>, usually before the solver starts, in order to define the problem and generate the actual high performance code used at evaluation.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="compiled_in_loop.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Loops</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="symbol_data.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Symbol-Data Overview</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Jose Antonio Fernandez-Fernandez
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Symbol-Data Maps</a><ul>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#the-mappedworkspace">The <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code></a><ul>
+<li><a class="reference internal" href="#connectivity">Connectivity</a><ul>
+<li><a class="reference internal" href="#connectivity-array-lambdas">Connectivity Array Lambdas</a></li>
+<li><a class="reference internal" href="#connectivity-array-types">Connectivity Array Types</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#symbols">Symbols</a><ul>
+<li><a class="reference internal" href="#symbols-creation">Symbols Creation</a></li>
+<li><a class="reference internal" href="#summation">Summation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fem-example">FEM Example</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    </body>
+</html>
