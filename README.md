@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <strong>Symbolic differentiation. C++ code generation. JIT. Global assembly. Non-linear optimization.</strong><br>
+    <strong>Symbolic differentiation. C++ code generation. JIT compilation. Global assembly. Non-linear optimization.</strong><br>
     <a href="https://symx.physics-simulation.org/">Docs</a> &nbsp;·&nbsp; <a href="https://animation.rwth-aachen.de/media/papers/96/2025-TOG-SymX.pdf">PDF</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3764928">ACM Page</a>
 </p>
 
@@ -18,7 +18,7 @@ SymX is the core engine of [STARK](https://github.com/InteractiveComputerGraphic
 
 Here is an overview of the SymX pipeline for FEM elasticity simulation:
 <p align="center">
-    <img src="docs/source/_static/overview.jpg" alt="SymX overview" style="width:75%;">
+    <img src="docs/source/_static/overview.jpg" alt="SymX overview" style="width:85%;">
 </p>
 
 The goal is to reduce **time-to-solution**.
@@ -144,7 +144,7 @@ Full documentation: <https://symx.physics-simulation.org/>
 - [Hello World](https://symx.physics-simulation.org/hello_world.html)
 - [Setup](https://symx.physics-simulation.org/setup.html)
 - [Architecture Overview](https://symx.physics-simulation.org/diagram.html)
-- [Core Symbolics](https://interactivecomputergraphics.github.io/symx/symbols.html)
+- [Core Symbolics](https://symx.physics-simulation.org/symbols.html)
 - [Compilation](https://symx.physics-simulation.org/compilation.html)
 - [Symbol-Data Maps](https://symx.physics-simulation.org/mapped_workspace.html)
 - [Loops](https://symx.physics-simulation.org/compiled_in_loop.html)
