@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-    <strong>Symbolic differentiation. C++ code generation. Global assembly. Non-linear optimization.</strong><br>
-    <a href="https://interactivecomputergraphics.github.io/symx/">Docs</a> &nbsp;·&nbsp; <a href="https://animation.rwth-aachen.de/media/papers/96/2025-TOG-SymX.pdf">PDF</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3764928">ACM Page</a>
+    <strong>Symbolic differentiation. C++ code generation. JIT. Global assembly. Non-linear optimization.</strong><br>
+    <a href="https://symx.physics-simulation.org/">Docs</a> &nbsp;·&nbsp; <a href="https://animation.rwth-aachen.de/media/papers/96/2025-TOG-SymX.pdf">PDF</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3764928">ACM Page</a>
 </p>
 
 SymX is a C++ library for **symbolic differentiation** with automatic **code generation**, **compilation** and **evaluation**.
@@ -16,7 +16,10 @@ SymX targets **non-linear optimization pipelines** typical of **FEM solvers**, b
 It uses a **stencil-based** perspective: expressions are defined per _element_ and evaluated over a discretization.
 SymX is the core engine of [STARK](https://github.com/InteractiveComputerGraphics/stark), a simulation framework for FEM elasticity, shells, rigid bodies, and frictional contact.
 
-Here is an overview of the SymX pipeline for FEM elasticity simulation (see [Docs](https://interactivecomputergraphics.github.io/symx/diagram.html) for a detailed diagram).
+Here is an overview of the SymX pipeline for FEM elasticity simulation:
+<p align="center">
+    <img src="docs/source/_static/overview.jpg" alt="SymX overview" style="width:75%;">
+</p>
 
 The goal is to reduce **time-to-solution**.
 In research, the bottleneck is often the time between an idea and a trustworthy result.
@@ -36,7 +39,10 @@ Here a list of simulations solved using SymX, corresponding to public research l
 * Differentiable shell mechanics
 * Adjoint method (diff sim) for quasistatics
 
-The following gallery shows some of such results (see [Docs](https://interactivecomputergraphics.github.io/symx/examples.html) for example videos and images).
+The following gallery shows some of such results:
+<p align="center">
+  <img src="https://github.com/InteractiveComputerGraphics/SymX/blob/gh-pages/gallery.webp" alt="SymX gallery" width="680">
+</p>
 
 ## Features
 - **Powerful symbolics:** Arithmetic, trig, sqrt/pow, min/max/abs, branching; arbitrary nested differentiation; automatic CSE.
@@ -120,7 +126,7 @@ SymX takes over the heavy lifting: differentiation of element gradient and Hessi
 ## Examples
 
 This repository comes with a few examples to get you started.
-You can find descriptions and links to the code in [Examples in Docs](docs/source/examples.md).
+You can find descriptions and links to the code in [Examples in Docs](https://symx.physics-simulation.org/examples.html).
 
 Here is a summary:
 
@@ -133,18 +139,19 @@ Here is a summary:
 
 ## Documentation
 
-Full documentation: <https://interactivecomputergraphics.github.io/symx/>
+Full documentation: <https://symx.physics-simulation.org/>
 
-- [Setup](https://interactivecomputergraphics.github.io/symx/setup.html)
-- [Hello World](https://interactivecomputergraphics.github.io/symx/hello_world.html)
-- [Architecture overview](https://interactivecomputergraphics.github.io/symx/diagram.html)
-- [Core symbolic API](https://interactivecomputergraphics.github.io/symx/symbols.html)
-- [Compilation](https://interactivecomputergraphics.github.io/symx/compilation.html)
-- [Data mapping and loops](https://interactivecomputergraphics.github.io/symx/mapped_workspace.html)
-- [Second-order optimization](https://interactivecomputergraphics.github.io/symx/second_order_optimization.html)
-- [FEM integration](https://interactivecomputergraphics.github.io/symx/fem_integration.html)
-- [Newton's Method](https://interactivecomputergraphics.github.io/symx/newtons_method.html)
-- [Examples](https://interactivecomputergraphics.github.io/symx/examples.html)
+- [Hello World](https://symx.physics-simulation.org/hello_world.html)
+- [Setup](https://symx.physics-simulation.org/setup.html)
+- [Architecture Overview](https://symx.physics-simulation.org/diagram.html)
+- [Core Symbolics](https://interactivecomputergraphics.github.io/symx/symbols.html)
+- [Compilation](https://symx.physics-simulation.org/compilation.html)
+- [Symbol-Data Maps](https://symx.physics-simulation.org/mapped_workspace.html)
+- [Loops](https://symx.physics-simulation.org/compiled_in_loop.html)
+- [Second-order Optimization](https://symx.physics-simulation.org/second_order_optimization.html)
+- [FEM Integration](https://symx.physics-simulation.org/fem_integration.html)
+- [Newton's Method](https://symx.physics-simulation.org/newtons_method.html)
+- [Examples](https://symx.physics-simulation.org/examples.html)
 
 
 ## Build SymX
@@ -158,7 +165,7 @@ build/tests/tests                 # Run tests
 build/examples/examples           # Run examples
 ```
 
-See [Setup in Docs](https://interactivecomputergraphics.github.io/symx/setup.html) for a detailed explanation of how to set SymX up and integrate it in a parent CMake project.
+See [Setup in Docs](https://symx.physics-simulation.org/setup.html) for a detailed explanation of how to set SymX up and integrate it in a parent CMake project.
 
 
 ## Research Using SymX
