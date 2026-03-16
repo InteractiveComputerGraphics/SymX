@@ -126,6 +126,7 @@ SymX takes over the heavy lifting: differentiation of element gradient and Hessi
 ## Examples
 
 This repository comes with a few examples to get you started.
+Select the desired experiment (or all) in `examples/examples_main.cpp`.
 You can find descriptions and links to the code in [Examples in Docs](https://symx.physics-simulation.org/examples.html).
 
 Here is a summary:
@@ -166,6 +167,8 @@ build/examples/examples           # Run examples
 ```
 
 See [Setup in Docs](https://symx.physics-simulation.org/setup.html) for a detailed explanation of how to set SymX up and integrate it in a parent CMake project.
+
+**Note for Windows users:** JIT compilation may be significantly slower on Windows than on Linux or macOS due to the way compiler toolchains are loaded dynamically.
 
 
 ## Research Using SymX
