@@ -75,7 +75,7 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 
 #ifdef _MSC_VER
 	const std::string enable_output = (get_suppress_compiler_output()) ? " >nul 2>nul " : "";
-	command = compiler_path + enable_output;
+	command = "call " + compiler_path + enable_output;
 	command += " && cd /d \"" + folder + "\"";
 	command += " && cl " + name + ".cpp /LD /Ox /arch:AVX2 /bigobj" + enable_output;  // Note: fast-math is not used because it can change the expected results (e.g. sqrt(pow(x, 2)) < 0)
 	command += " && del " + name + ".exp";
