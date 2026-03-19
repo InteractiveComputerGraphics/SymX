@@ -323,8 +323,8 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_AVX2</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">ON</span></code></p></td>
-<td><p>Enable AVX2 + FMA SIMD paths</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">AUTO</span></code></p></td>
+<td><p>Enable AVX2 + FMA SIMD paths (<code class="docutils literal notranslate"><span class="pre">AUTO</span></code> / <code class="docutils literal notranslate"><span class="pre">ON</span></code> / <code class="docutils literal notranslate"><span class="pre">OFF</span></code>); <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> enables on x86/x86_64/AMD64</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_COMPILER_PATH</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">AUTO</span></code></p></td>
@@ -344,8 +344,10 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 <section id="avx2-support">
 <h3>AVX2 support<a class="headerlink" href="#avx2-support" title="Link to this heading">¶</a></h3>
 <p>SymX uses AVX2 to speedup computations in several locations, such as evaluation and linear system solves.
-If your system does not support it (e.g. Apple Silicon) use <code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_AVX2=OFF</span></code> in CMake to disable such code paths.</p>
-<p>If you try to compile SymX as-is, without support for AVX2 you will get something like:</p>
+<code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_AVX2</span></code> accepts <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> (default), <code class="docutils literal notranslate"><span class="pre">ON</span></code>, or <code class="docutils literal notranslate"><span class="pre">OFF</span></code>.
+<code class="docutils literal notranslate"><span class="pre">AUTO</span></code> enables AVX2 on x86/x86_64/AMD64 and disables it everywhere else (e.g. Apple Silicon).
+Override explicitly with <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_AVX2=ON</span></code> or <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_AVX2=OFF</span></code>.</p>
+<p>If you try to compile on a non-AVX2 system with <code class="docutils literal notranslate"><span class="pre">ON</span></code>, you will get something like:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>../immintrin.h:14<span class="w"> </span>error<span class="w"> </span><span class="s2">&quot;This header is only meant to be used on x86 and x64 architecture&quot;</span>
 </pre></div>
 </div>

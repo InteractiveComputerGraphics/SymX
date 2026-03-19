@@ -383,7 +383,7 @@ Under the hood, the function generated in <code class="docutils literal notransl
 </pre></div>
 </div>
 <p>Note that you will need to set values of type <code class="docutils literal notranslate"><span class="pre">FLOAT</span></code> and that the result will be returned as <code class="docutils literal notranslate"><span class="pre">View&lt;FLOAT&gt;</span></code>.
-If your system does not support these SIMD types, set SymX’s the CMake flag <code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_AVX2</span></code> to <code class="docutils literal notranslate"><span class="pre">OFF</span></code>.</p>
+If your system does not support these SIMD types, disable them with <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_AVX2=OFF</span></code> (the default <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> already does this on non-x86 targets).</p>
 </section>
 <section id="parallel-evaluation">
 <h3>Parallel evaluation<a class="headerlink" href="#parallel-evaluation" title="Link to this heading">¶</a></h3>

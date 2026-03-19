@@ -120,7 +120,7 @@ Compiled<__m256d> compiled({f, df_dx}, "my_function_simd4d", codegen_dir, checks
 Compiled<__m256> compiled({f, df_dx}, "my_function_simd8f", codegen_dir, checksum);
 ```
 Note that you will need to set values of type `FLOAT` and that the result will be returned as `View<FLOAT>`.
-If your system does not support these SIMD types, set SymX's the CMake flag `SYMX_ENABLE_AVX2` to `OFF`.
+If your system does not support these SIMD types, disable them with `-DSYMX_ENABLE_AVX2=OFF` (the default `AUTO` already does this on non-x86 targets).
 
 ### Parallel evaluation
 You can evaluate a `Compiled` expression in parallel in the following way:
