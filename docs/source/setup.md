@@ -41,7 +41,7 @@ build/examples/examples   # Examples
 
 | Option | Default | Description |
 |---|---|---|
-| `SYMX_ENABLE_AVX2` | `ON` | Enable AVX2 + FMA SIMD paths |
+| `SYMX_ENABLE_AVX2` | `AUTO` | Enable AVX2 + FMA SIMD paths (`AUTO` / `ON` / `OFF`); `AUTO` enables on x86/x86_64/AMD64 |
 | `SYMX_COMPILER_PATH` | `AUTO` | Compiler used for JIT code generation at runtime |
 | `SYMX_CODEGEN_DIR` | *(empty)* | Output directory for generated files; defaults to `<build>/codegen` |
 | `SYMX_HESS_STORAGE_FLOAT` | `float` | Hessian storage precision (`float` or `double`) |
@@ -49,9 +49,11 @@ build/examples/examples   # Examples
 
 ### AVX2 support
 SymX uses AVX2 to speedup computations in several locations, such as evaluation and linear system solves.
-If your system does not support it (e.g. Apple Silicon) use `SYMX_ENABLE_AVX2=OFF` in CMake to disable such code paths.
+`SYMX_ENABLE_AVX2` accepts `AUTO` (default), `ON`, or `OFF`.
+`AUTO` enables AVX2 on x86/x86_64/AMD64 and disables it everywhere else (e.g. Apple Silicon).
+Override explicitly with `-DSYMX_ENABLE_AVX2=ON` or `-DSYMX_ENABLE_AVX2=OFF`.
 
-If you try to compile SymX as-is, without support for AVX2 you will get something like:
+If you try to compile on a non-AVX2 system with `ON`, you will get something like:
 
 ```bash
 ../immintrin.h:14 error "This header is only meant to be used on x86 and x64 architecture"
