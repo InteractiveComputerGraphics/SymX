@@ -206,8 +206,8 @@ If SymX contributes to your research, please cite the paper.
 ```
 
 ## Contributors
-- [José Antonio Fernández-Fernández](https://github.com/JoseAntFer) (Correspondence author)
-- [Fabian Loeschner](https://github.com/w1th0utnam3)
+- [José Antonio Fernández-Fernández](https://github.com/JoseAntFer) (Corresponding author)
+- [Fabian Löschner](https://github.com/w1th0utnam3)
 - [Lukas Westhofen](https://github.com/BjoernBinaer)
 - [Andreas Longva](https://github.com/Andlon)
 - [Jan Bender](https://animation.rwth-aachen.de/person/1/)
