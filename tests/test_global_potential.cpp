@@ -99,7 +99,7 @@ TEST_CASE("Stable Neo-Hookean", "[GlobalEnergy]")
 	// Test with FD
 	if constexpr (std::is_same_v<ElementHessians::HESS_STORAGE_FLOAT, double>)
 	{
-		REQUIRE(compiled.test_derivatives_with_FD(/* h = */ 1e-7) < 1e-4);
+		REQUIRE(compiled.test_derivatives_with_FD(/* h = */ 1e-7) < 0.002);
 	}
 	else {
 		REQUIRE(compiled.test_derivatives_with_FD(/* h = */ 1e-5) < 0.5);

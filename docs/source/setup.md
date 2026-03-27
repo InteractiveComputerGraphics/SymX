@@ -44,7 +44,7 @@ build/examples/examples   # Examples
 | `SYMX_ENABLE_AVX2` | `AUTO` | Enable AVX2 + FMA SIMD paths (`AUTO` / `ON` / `OFF`); `AUTO` enables on x86/x86_64/AMD64 |
 | `SYMX_COMPILER_PATH` | `AUTO` | Compiler used for JIT code generation at runtime |
 | `SYMX_CODEGEN_DIR` | *(empty)* | Output directory for generated files; defaults to `<build>/codegen` |
-| `SYMX_HESS_STORAGE_FLOAT` | `float` | Hessian storage precision (`float` or `double`) |
+| `SYMX_HESS_STORAGE_FLOAT` | `double` | Hessian storage precision (`float` or `double`) |
 
 
 ### AVX2 support
@@ -59,9 +59,11 @@ If you try to compile on a non-AVX2 system with `ON`, you will get something lik
 ../immintrin.h:14 error "This header is only meant to be used on x86 and x64 architecture"
 ```
 
-### `float` Hessian approximation
+### `float` Hessian approximation (performance)
 Using `SYMX_HESS_STORAGE_FLOAT=float` lets SymX store the global Hessian used in Newton's Method in single point precision.
-Importantly, all _operations_ are still performed in `double` (via casting). This option simply quantizes the global matrix values to `float`, halving memory traffic and significantly increasing performance.
+Importantly, all _operations_ are still performed in `double` (via casting). 
+This option simply quantizes the global matrix values to `float`, halving memory traffic and significantly increasing performance.
+The default remains `double` as very numerically stiff problems might require it, but the user is encouraged to assess whether `float` works for their application.
 
 
 ## Compiler path
