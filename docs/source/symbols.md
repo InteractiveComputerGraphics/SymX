@@ -59,6 +59,12 @@ These can be differentiated and their generated code will feature actual `if-els
 Operations such as `min(), max()` use `branch` internally.
 Note that the use of `branch` prevents emitting SIMD code.
 
+**Important:** The condition passed to `branch` is a `Scalar` whose **sign** determines which branch executes.
+When you write `a > b`, SymX internally stores `a - b` as the condition scalar.
+Opposite for `a < b`.
+The true branch executes when that condition scalar is **strictly positive** (`> 0`), exact zero will then fall to the false branch.
+Due to the floating point nature of the comparison, the user might consider writing activation mechanisms with conditions that are `+1` and `-1` (instead of `0`) to more clearly indicate sign.
+
 ## `Vector` and `Matrix`
 `Vector` and `Matrix` are simply a list of `Scalar`s that provide typical algebraic operator overloads.
 Further, `Vector` provides `norm(), dot(), cross3()` and such, while `Matrix` provides `det(), inv(), trace()` etc.

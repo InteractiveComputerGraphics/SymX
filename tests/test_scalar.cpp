@@ -355,6 +355,235 @@ TEST_CASE("Branches", "[scalar]")
     }
 }
 
+TEST_CASE("Branch boundary conditions", "[scalar]")
+{
+    const double eps = std::numeric_limits<double>::epsilon();
+
+    // -------------------------------------------------------------------
+    // 1. Direct-scalar selector: branch(c, T, F)
+    //    True branch fires when c > 0 (strictly).
+    // -------------------------------------------------------------------
+    SECTION("Selector conditions +1/+eps/0/-eps/-1 - eval")
+    {
+        Workspace ws;
+        Scalar c = ws.make_scalar();
+        Scalar E = branch(c, 10.0, -5.0);
+
+        c.set_value(1.0);    REQUIRE(approx(E.eval(),  10.0));  // +1   → true
+        c.set_value(eps);    REQUIRE(approx(E.eval(),  10.0));  // +eps → true
+        c.set_value(0.0);    REQUIRE(approx(E.eval(),  -5.0));  // 0    → false
+        c.set_value(-eps);   REQUIRE(approx(E.eval(),  -5.0));  // -eps → false
+        c.set_value(-1.0);   REQUIRE(approx(E.eval(),  -5.0));  // -1   → false
+    }
+
+    SECTION("Selector conditions +1/+eps/0/-eps/-1 - compiled")
+    {
+        Workspace ws;
+        Scalar c = ws.make_scalar();
+        Scalar E = branch(c, 10.0, -5.0);
+        Compiled<double> compiled({E}, "branch_selector", symx::get_codegen_dir(), E.get_checksum());
+
+        compiled.set(c, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));  // +1   → true
+        compiled.set(c, eps);   REQUIRE(approx(compiled.run()[0],  10.0));  // +eps → true
+        compiled.set(c, 0.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // 0    → false
+        compiled.set(c, -eps);  REQUIRE(approx(compiled.run()[0],  -5.0));  // -eps → false
+        compiled.set(c, -1.0);  REQUIRE(approx(compiled.run()[0],  -5.0));  // -1   → false
+    }
+
+    // -------------------------------------------------------------------
+    // 2. operator> : branch(a > b, T, F)
+    //    Internally stores cond = a - b. True branch fires when a - b > 0.
+    // -------------------------------------------------------------------
+    SECTION("operator> boundary - eval")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+        Scalar E = branch(a > b, 10.0, -5.0);
+
+        a.set_value(2.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  10.0));  // a > b  → true
+        a.set_value(1.0 + eps);  b.set_value(1.0);        REQUIRE(approx(E.eval(),  10.0));  // a = b+eps → true
+        a.set_value(1.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a == b → false (equality → false branch)
+        a.set_value(1.0 - eps);  b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a = b-eps → false
+        a.set_value(0.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a < b  → false
+    }
+
+    SECTION("operator> boundary - compiled")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+        Scalar E = branch(a > b, 10.0, -5.0);
+        Compiled<double> compiled({E}, "branch_gt", symx::get_codegen_dir(), E.get_checksum());
+
+        compiled.set(a, 2.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));  // a > b
+        compiled.set(a, 1.0 + eps); compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));  // a = b+eps
+        compiled.set(a, 1.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a == b → false
+        compiled.set(a, 1.0 - eps); compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a = b-eps
+        compiled.set(a, 0.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a < b
+    }
+
+    // -------------------------------------------------------------------
+    // 3. operator< : branch(a < b, T, F)
+    //    Internally stores cond = b - a. True branch fires when b - a > 0.
+    // -------------------------------------------------------------------
+    SECTION("operator< boundary - eval")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+        Scalar E = branch(a < b, 10.0, -5.0);
+
+        a.set_value(0.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  10.0));  // a < b  → true
+        a.set_value(1.0 - eps);  b.set_value(1.0);        REQUIRE(approx(E.eval(),  10.0));  // a = b-eps → true
+        a.set_value(1.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a == b → false
+        a.set_value(1.0 + eps);  b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a = b+eps → false
+        a.set_value(2.0);        b.set_value(1.0);        REQUIRE(approx(E.eval(),  -5.0));  // a > b  → false
+    }
+
+    SECTION("operator< boundary - compiled")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+        Scalar E = branch(a < b, 10.0, -5.0);
+        Compiled<double> compiled({E}, "branch_lt", symx::get_codegen_dir(), E.get_checksum());
+
+        compiled.set(a, 0.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));  // a < b
+        compiled.set(a, 1.0 - eps); compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));  // a = b-eps
+        compiled.set(a, 1.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a == b → false
+        compiled.set(a, 1.0 + eps); compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a = b+eps
+        compiled.set(a, 2.0);       compiled.set(b, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));  // a > b
+    }
+
+    // -------------------------------------------------------------------
+    // 4. Comparison against zero (common activation pattern)
+    // -------------------------------------------------------------------
+    SECTION("branch(a > 0) activation pattern - eval and compiled")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar E = branch(a > 0.0, 10.0, -5.0);
+
+        // --- eval ---
+        a.set_value(1.0);    REQUIRE(approx(E.eval(),  10.0));  // +1   → true
+        a.set_value(eps);    REQUIRE(approx(E.eval(),  10.0));  // +eps → true
+        a.set_value(0.0);    REQUIRE(approx(E.eval(),  -5.0));  // 0    → false (activation off)
+        a.set_value(-eps);   REQUIRE(approx(E.eval(),  -5.0));  // -eps → false
+        a.set_value(-1.0);   REQUIRE(approx(E.eval(),  -5.0));  // -1   → false
+
+        // --- compiled ---
+        Compiled<double> compiled({E}, "branch_gt_zero", symx::get_codegen_dir(), E.get_checksum());
+        compiled.set(a, 1.0);   REQUIRE(approx(compiled.run()[0],  10.0));
+        compiled.set(a, eps);   REQUIRE(approx(compiled.run()[0],  10.0));
+        compiled.set(a, 0.0);   REQUIRE(approx(compiled.run()[0],  -5.0));
+        compiled.set(a, -eps);  REQUIRE(approx(compiled.run()[0],  -5.0));
+        compiled.set(a, -1.0);  REQUIRE(approx(compiled.run()[0],  -5.0));
+    }
+
+    SECTION("branch(a < 0) activation pattern - eval and compiled")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar E = branch(a < 0.0, 10.0, -5.0);
+
+        // --- eval ---
+        a.set_value(-1.0);   REQUIRE(approx(E.eval(),  10.0));  // -1   → true
+        a.set_value(-eps);   REQUIRE(approx(E.eval(),  10.0));  // -eps → true
+        a.set_value(0.0);    REQUIRE(approx(E.eval(),  -5.0));  // 0    → false
+        a.set_value(eps);    REQUIRE(approx(E.eval(),  -5.0));  // +eps → false
+        a.set_value(1.0);    REQUIRE(approx(E.eval(),  -5.0));  // +1   → false
+
+        // --- compiled ---
+        Compiled<double> compiled({E}, "branch_lt_zero", symx::get_codegen_dir(), E.get_checksum());
+        compiled.set(a, -1.0);  REQUIRE(approx(compiled.run()[0],  10.0));
+        compiled.set(a, -eps);  REQUIRE(approx(compiled.run()[0],  10.0));
+        compiled.set(a, 0.0);   REQUIRE(approx(compiled.run()[0],  -5.0));
+        compiled.set(a, eps);   REQUIRE(approx(compiled.run()[0],  -5.0));
+        compiled.set(a, 1.0);   REQUIRE(approx(compiled.run()[0],  -5.0));
+    }
+
+    // -------------------------------------------------------------------
+    // 5. Derived operations (min, max, abs, sign) at equality boundary
+    // -------------------------------------------------------------------
+    SECTION("min and max at boundary - eval")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+        Scalar mn = min(a, b);
+        Scalar mx = max(a, b);
+
+        // a > b
+        a.set_value(3.0); b.set_value(2.0);
+        REQUIRE(approx(mn.eval(), 2.0));
+        REQUIRE(approx(mx.eval(), 3.0));
+
+        // a < b
+        a.set_value(1.0); b.set_value(2.0);
+        REQUIRE(approx(mn.eval(), 1.0));
+        REQUIRE(approx(mx.eval(), 2.0));
+
+        // a == b: both branches collapse to the same numeric value
+        a.set_value(2.0); b.set_value(2.0);
+        REQUIRE(approx(mn.eval(), 2.0));
+        REQUIRE(approx(mx.eval(), 2.0));
+
+        // a = b + eps (a strictly greater)
+        a.set_value(1.0 + eps); b.set_value(1.0);
+        REQUIRE(approx(mn.eval(), 1.0,       1e-14));
+        REQUIRE(approx(mx.eval(), 1.0 + eps, 1e-14));
+    }
+
+    SECTION("abs and sign at boundary - eval")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar ab = abs(a);
+        Scalar sg = sign(a);
+
+        // Positive: true branch
+        a.set_value(3.0);   REQUIRE(approx(ab.eval(),  3.0));  REQUIRE(approx(sg.eval(),  1.0));
+        a.set_value(eps);   REQUIRE(approx(ab.eval(),  eps));  REQUIRE(approx(sg.eval(),  1.0));
+
+        // Zero: cond = 0 is not > 0, so false branch
+        //   abs(0)  = -(-0) = 0 (both branches give 0 anyway)
+        //   sign(0) = -1.0  (false branch)
+        a.set_value(0.0);   REQUIRE(approx(ab.eval(),  0.0));  REQUIRE(approx(sg.eval(), -1.0));
+
+        // Negative: false branch
+        a.set_value(-eps);  REQUIRE(approx(ab.eval(),  eps));  REQUIRE(approx(sg.eval(), -1.0));
+        a.set_value(-3.0);  REQUIRE(approx(ab.eval(),  3.0));  REQUIRE(approx(sg.eval(), -1.0));
+    }
+
+    // -------------------------------------------------------------------
+    // 6. Eval vs compiled consistency across the boundary
+    // -------------------------------------------------------------------
+    SECTION("Eval vs compiled consistency at boundary")
+    {
+        Workspace ws;
+        Scalar a = ws.make_scalar();
+        Scalar b = ws.make_scalar();
+
+        // Use a non-trivial expression so both paths exercise real computation
+        Scalar E = branch(a > b, a * a - b, b.sqrt() + a);
+        Compiled<double> compiled({E}, "branch_boundary_consistency",
+                                  symx::get_codegen_dir(), E.get_checksum());
+
+        auto check = [&](double A, double B) {
+            a.set_value(A); b.set_value(B);
+            compiled.set(a, A); compiled.set(b, B);
+            REQUIRE(approx(E.eval(), compiled.run()[0]));
+        };
+
+        check(3.0,  2.0);       // a > b
+        check(1.0 + eps, 1.0);  // a = b+eps (just above boundary)
+        check(1.0,  1.0);       // a == b    (boundary → false branch)
+        check(1.0 - eps, 1.0);  // a = b-eps (just below boundary)
+        check(0.0,  2.0);       // a < b
+    }
+}
+
 TEST_CASE("Log edge cases", "[scalar]")
 {
     Workspace ws;
