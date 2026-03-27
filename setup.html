@@ -335,7 +335,7 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 <td><p>Output directory for generated files; defaults to <code class="docutils literal notranslate"><span class="pre">&lt;build&gt;/codegen</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_HESS_STORAGE_FLOAT</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">double</span></code></p></td>
 <td><p>Hessian storage precision (<code class="docutils literal notranslate"><span class="pre">float</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>)</p></td>
 </tr>
 </tbody>
@@ -352,10 +352,12 @@ Override explicitly with <code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 </section>
-<section id="float-hessian-approximation">
-<h3><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation<a class="headerlink" href="#float-hessian-approximation" title="Link to this heading">¶</a></h3>
+<section id="float-hessian-approximation-performance">
+<h3><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation (performance)<a class="headerlink" href="#float-hessian-approximation-performance" title="Link to this heading">¶</a></h3>
 <p>Using <code class="docutils literal notranslate"><span class="pre">SYMX_HESS_STORAGE_FLOAT=float</span></code> lets SymX store the global Hessian used in Newton’s Method in single point precision.
-Importantly, all <em>operations</em> are still performed in <code class="docutils literal notranslate"><span class="pre">double</span></code> (via casting). This option simply quantizes the global matrix values to <code class="docutils literal notranslate"><span class="pre">float</span></code>, halving memory traffic and significantly increasing performance.</p>
+Importantly, all <em>operations</em> are still performed in <code class="docutils literal notranslate"><span class="pre">double</span></code> (via casting).
+This option simply quantizes the global matrix values to <code class="docutils literal notranslate"><span class="pre">float</span></code>, halving memory traffic and significantly increasing performance.
+The default remains <code class="docutils literal notranslate"><span class="pre">double</span></code> as very numerically stiff problems might require it, but the user is encouraged to assess whether <code class="docutils literal notranslate"><span class="pre">float</span></code> works for their application.</p>
 </section>
 </section>
 <section id="compiler-path">
@@ -513,7 +515,7 @@ Enable it to see the raw compiler output:</p>
 <li><a class="reference internal" href="#building">Building</a></li>
 <li><a class="reference internal" href="#cmake-options">CMake options</a><ul>
 <li><a class="reference internal" href="#avx2-support">AVX2 support</a></li>
-<li><a class="reference internal" href="#float-hessian-approximation"><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation</a></li>
+<li><a class="reference internal" href="#float-hessian-approximation-performance"><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation (performance)</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#compiler-path">Compiler path</a><ul>

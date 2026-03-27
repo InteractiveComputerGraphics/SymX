@@ -315,6 +315,11 @@ By using</p>
 <p>These can be differentiated and their generated code will feature actual <code class="docutils literal notranslate"><span class="pre">if-else</span></code> statements.
 Operations such as <code class="docutils literal notranslate"><span class="pre">min(),</span> <span class="pre">max()</span></code> use <code class="docutils literal notranslate"><span class="pre">branch</span></code> internally.
 Note that the use of <code class="docutils literal notranslate"><span class="pre">branch</span></code> prevents emitting SIMD code.</p>
+<p><strong>Important:</strong> The condition passed to <code class="docutils literal notranslate"><span class="pre">branch</span></code> is a <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> whose <strong>sign</strong> determines which branch executes.
+When you write <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&gt;</span> <span class="pre">b</span></code>, SymX internally stores <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">-</span> <span class="pre">b</span></code> as the condition scalar.
+Opposite for <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;</span> <span class="pre">b</span></code>.
+The true branch executes when that condition scalar is <strong>strictly positive</strong> (<code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">0</span></code>), exact zero will then fall to the false branch.
+Due to the floating point nature of the comparison, the user might consider writing activation mechanisms with conditions that are <code class="docutils literal notranslate"><span class="pre">+1</span></code> and <code class="docutils literal notranslate"><span class="pre">-1</span></code> (instead of <code class="docutils literal notranslate"><span class="pre">0</span></code>) to more clearly indicate sign.</p>
 </section>
 </section>
 <section id="vector-and-matrix">
