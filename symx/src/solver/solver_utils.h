@@ -25,6 +25,10 @@ namespace symx
         InvalidConvergedState,
     };
 
+    // ================================================================
+    // Callbacks
+    // ================================================================
+
     static auto default_residual = [](Eigen::VectorXd& r) { return r.cwiseAbs().maxCoeff(); };
     class SolverCallbacks
     {
@@ -96,7 +100,11 @@ namespace symx
         }
 		bool run_is_converged() { 
             auto _t = this->context->logger->time("is_converged");
-            return this->_run_bool(false, this->is_converged); 
+            bool converged = false;
+            for (auto& f : this->is_converged) {
+                converged = f() || converged;
+            }
+            return converged;
         }
 		bool run_is_converged_state_valid() { 
             auto _t = this->context->logger->time("is_converged_state_valid");
