@@ -248,3 +248,12 @@ target_include_directories(symx SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/extern
 ## picoSHA2 — header-only, type appears in the public API (Scalar.h::_get_checksum).
 target_include_directories(symx SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/extern/picoSHA2/include)
 
+# Conditionally increase the stack size (hugely complex expressions might need it)
+set(SYMX_STACK_SIZE "10480000" CACHE STRING "Linker stack size in bytes")
+
+target_link_options(symx INTERFACE
+  "$<$<CXX_COMPILER_ID:MSVC>:/STACK:${SYMX_STACK_SIZE}>"
+  "$<$<CXX_COMPILER_ID:GNU>:-Wl,-z,stack-size=${SYMX_STACK_SIZE}>"
+  "$<$<CXX_COMPILER_ID:Clang>:-Wl,-z,--stack_size=${SYMX_STACK_SIZE}>"
+  "$<$<CXX_COMPILER_ID:AppleClang>:-Wl,-stack_size,${SYMX_STACK_SIZE}>"
+)
