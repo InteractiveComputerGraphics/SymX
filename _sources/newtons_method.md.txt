@@ -219,6 +219,8 @@ The following are the callback containers used:
 class SolverCallbacks
 {
     std::vector<std::function<void()>>    before_energy_evaluation;
+    std::vector<std::function<void()>>    before_step;
+    std::vector<std::function<void()>>    after_step;
     std::vector<std::function<bool()>>    is_initial_state_valid;
     std::vector<std::function<bool()>>    is_intermediate_state_valid;
     std::vector<std::function<void()>>    on_intermediate_state_invalid;
@@ -230,17 +232,19 @@ class SolverCallbacks
 ```
 
 Brief descriptions:
-- `before_energy_evaluation`: Will be executed before evaluating any value or derivative. Example: it can be used to update contact pairs.
-- `is_initial_state_valid`: Exits the Newton process before it starts. Example: Element inversions in the rest pose.
+- `before_step`: Executed at the very start of each Newton iteration. Example: logging, resetting per-iteration state.
+- `before_energy_evaluation`: Executed before evaluating any value or derivative each iteration. Example: update contact pairs.
+- `after_step`: Executed at the end of each Newton iteration, including failed/early-exit iterations. Guaranteed to be called once for every `before_step` invocation. Example: per-iteration diagnostics, adaptive parameter updates.
+- `is_initial_state_valid`: Exits the Newton process before it starts. Example: element inversions in the rest pose.
 - `is_intermediate_state_valid`: Used to backtrack invalid states in the line search. Example: element inversions as a consequence of a step.
-- `on_intermediate_state_invalid`: Used if the invalid state could not be backtracked after the afforded number of iterations. Example: increase penalty stiffness.
-- `on_armijo_fail`: Analogous if Armijo's backtracking fails. Example: restart the solve with a shorter time step size.
+- `on_intermediate_state_invalid`: Called when the invalid state could not be backtracked. Example: increase penalty stiffness.
+- `on_armijo_fail`: Called when Armijo backtracking fails. Example: restart the solve with a shorter time step size.
 - `is_converged`: User's custom convergence criteria.
-- `is_converged_state_valid`: Let Newton's Method return non-success right before return. Example: penalties are too soft, tighten them before requesting repeating the solve.
-- `max_allowed_step`: Allows the user to specify a max step for the current iteration. Example: CCD.
+- `is_converged_state_valid`: Checked right before returning success — lets the solver return non-success if the converged state is unacceptable. Example: tighten constraints before requesting a repeat solve.
+- `max_allowed_step`: Returns the maximum step length for the current iteration. Example: CCD.
 
-Callbacks can be appended to those lists by using the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
-`SolverCallbacks` can be accessed in `NewtonsMethod.callbacks`.
+Callbacks can be appended via the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
+`SolverCallbacks` can be accessed via `NewtonsMethod.callbacks`.
 
 Further, a custom residual can be specified by `.set_residual(std::function<double(Eigen::VectorXd&)> f)`.
 
