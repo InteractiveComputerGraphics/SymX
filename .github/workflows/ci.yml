@@ -2,36 +2,30 @@ name: CI
 
 on:
   push:
-    branches: [ "**" ]
   pull_request:
-    branches: [ "**" ]
 
 jobs:
   build-and-test:
-    name: ${{ matrix.os }} / ${{ matrix.build_type }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        build_type: [Release]
+        os: [ubuntu-24.04, macos-14, windows-2022]
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install libomp (macOS)
         if: runner.os == 'macOS'
         run: brew install libomp
 
-      - name: Configure CMake
-        run: |
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-            -DSYMX_ENABLE_DIAGNOSTIC_TESTS=OFF
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build tests
-        run: cmake --build build --target tests --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+      - name: Build
+        run: cmake --build build --config Release --parallel
 
-      - name: Run tests
-        working-directory: build
-        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
+      - name: Test
+        run: ctest --test-dir build --build-config Release --output-on-failure
