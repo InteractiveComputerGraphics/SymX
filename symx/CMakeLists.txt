@@ -88,6 +88,9 @@ set(SOURCE_FILES
 	src/solver/NewtonsMethod.cpp
 	src/solver/gnuplot.h
 	src/solver/gnuplot.cpp
+	src/solver/solver_types.h
+	src/solver/solver_settings.h
+	src/solver/SolverCallbacks.h
 	src/solver/solver_utils.h
 	src/solver/fem_integrators.h
 	src/solver/fem_integrators.cpp

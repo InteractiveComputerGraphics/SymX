@@ -83,6 +83,15 @@ SolverReturn NewtonsMethod::solve()
     while (result == SolverReturn::Running) {
         newton_iteration++;
 
+        // Before-step callback (called for every iteration, including failed ones)
+        this->callbacks->run_before_step();
+
+        // After-step callback (RAII)
+        struct AfterNewtonStepGuard {
+            spSolverCallbacks& callbacks;
+            ~AfterNewtonStepGuard() { callbacks->run_after_step(); }
+        } _after_step_guard{this->callbacks};
+
         // Check maximum iterations
         if (newton_iteration == this->settings.max_iterations) {
             this->output->print_with_new_line("Newton failure: Too many iterations.", Verbosity::Medium);
