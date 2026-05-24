@@ -54,6 +54,7 @@ SecondOrderCompiledGlobal::SecondOrderCompiledGlobal(spGlobalPotential global_po
     
     //// Run compilation tasks
     context->output->print_with_new_line("Compiling... ", Verbosity::Minimal);
+    std::cout << std::flush;
     tasks.run(context->n_threads);
     context->output->print("done.", Verbosity::Minimal);
     const double t1 = omp_get_wtime();
