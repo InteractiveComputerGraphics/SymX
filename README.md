@@ -1,3 +1,5 @@
+(adjoint capabilities coming soon)
+
 # SymX
 
 <p align="center">
