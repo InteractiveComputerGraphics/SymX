@@ -639,10 +639,11 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
 
     // Generate a smooth 3D Lissajous trajectory (1:2:3 frequency ratios).
     const int n_frames = 360;
+    constexpr double pi = 3.141592653589793238462643383279502884;
     std::vector<Eigen::Vector3d> targets;
     targets.reserve(n_frames);
     for (int i = 0; i < n_frames; ++i) {
-        const double t = 2.0 * M_PI * i / (double)n_frames;
+        const double t = 2.0 * pi * i / (double)n_frames;
         targets.push_back({
             trajectory_aabb_bottom.x() + (trajectory_aabb_top.x() - trajectory_aabb_bottom.x()) * 0.5 * (1.0 + std::cos(t)),  // x
             trajectory_aabb_bottom.y() + (trajectory_aabb_top.y() - trajectory_aabb_bottom.y()) * 0.5 * (1.0 + std::sin(2.0 * t)),  // y
