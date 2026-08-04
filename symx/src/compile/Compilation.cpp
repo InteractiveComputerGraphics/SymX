@@ -407,7 +407,7 @@ void symx::Compilation::_add_instructions_scalar(std::string& code, Sequence& se
 		case ExprType::Symbol: // Represents output
 			code += tab() + "out[" + std::to_string(op.dst) + "] = " + idx(op.a) + ";\n"; break;
 		case ExprType::ConstantFloat:
-			code += tab() + type + " " + idx(op.dst) + " = " + to_string_with_precision(op.constant, 20) + ";\n"; break;
+			code += tab() + type + " " + idx(op.dst) + " = " + to_string_with_precision(op.const_val, 20) + ";\n"; break;
 		case ExprType::Add:
 			code += tab() + type + " " + idx(op.dst) + " = " + idx(op.a) + " + " + idx(op.b) + ";\n"; break;
 		case ExprType::Sub:
@@ -491,7 +491,7 @@ void symx::Compilation::_add_instructions_simd(std::string& code, Sequence& eval
 		case ExprType::Symbol: // Represents output
 			code += "\tout[" + std::to_string(op.dst) + "] = " + idx(op.a) + ";\n"; break;
 		case ExprType::ConstantFloat:
-			code += begin_line + idx(op.dst) + " = set1(" + to_string_with_precision(op.constant, 20) + constant_suffix + ");\n"; break;
+			code += begin_line + idx(op.dst) + " = set1(" + to_string_with_precision(op.const_val, 20) + constant_suffix + ");\n"; break;
 		case ExprType::Add:
 			code += begin_line + idx(op.dst) + " = add(" + idx(op.a) + ", " + idx(op.b) + ");\n"; break;
 		case ExprType::Sub:

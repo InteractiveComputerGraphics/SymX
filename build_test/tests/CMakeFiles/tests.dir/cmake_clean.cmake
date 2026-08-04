@@ -1,0 +1,40 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/tests.dir/link.d"
+  "CMakeFiles/tests.dir/sympy_derivatives.cpp.o"
+  "CMakeFiles/tests.dir/sympy_derivatives.cpp.o.d"
+  "CMakeFiles/tests.dir/test_adjoint.cpp.o"
+  "CMakeFiles/tests.dir/test_adjoint.cpp.o.d"
+  "CMakeFiles/tests.dir/test_adjoint_opt.cpp.o"
+  "CMakeFiles/tests.dir/test_adjoint_opt.cpp.o.d"
+  "CMakeFiles/tests.dir/test_compilation.cpp.o"
+  "CMakeFiles/tests.dir/test_compilation.cpp.o.d"
+  "CMakeFiles/tests.dir/test_diff.cpp.o"
+  "CMakeFiles/tests.dir/test_diff.cpp.o.d"
+  "CMakeFiles/tests.dir/test_first_order_optimizer.cpp.o"
+  "CMakeFiles/tests.dir/test_first_order_optimizer.cpp.o.d"
+  "CMakeFiles/tests.dir/test_global_potential.cpp.o"
+  "CMakeFiles/tests.dir/test_global_potential.cpp.o.d"
+  "CMakeFiles/tests.dir/test_loops.cpp.o"
+  "CMakeFiles/tests.dir/test_loops.cpp.o.d"
+  "CMakeFiles/tests.dir/test_main.cpp.o"
+  "CMakeFiles/tests.dir/test_main.cpp.o.d"
+  "CMakeFiles/tests.dir/test_mapped_workspace_make.cpp.o"
+  "CMakeFiles/tests.dir/test_mapped_workspace_make.cpp.o.d"
+  "CMakeFiles/tests.dir/test_matrix.cpp.o"
+  "CMakeFiles/tests.dir/test_matrix.cpp.o.d"
+  "CMakeFiles/tests.dir/test_newton_method.cpp.o"
+  "CMakeFiles/tests.dir/test_newton_method.cpp.o.d"
+  "CMakeFiles/tests.dir/test_scalar.cpp.o"
+  "CMakeFiles/tests.dir/test_scalar.cpp.o.d"
+  "CMakeFiles/tests.dir/test_solver_foundations.cpp.o"
+  "CMakeFiles/tests.dir/test_solver_foundations.cpp.o.d"
+  "CMakeFiles/tests.dir/test_vector.cpp.o"
+  "CMakeFiles/tests.dir/test_vector.cpp.o.d"
+  "tests"
+  "tests.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/tests.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

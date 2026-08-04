@@ -27,7 +27,7 @@ namespace symx
 		/* Methods */
 		Expressions();
 		int32_t declare_symbol();
-		int32_t declare_constant_float(double constant);
+		int32_t declare_constant_float(double val);
 		int32_t add_operation(ExprType type, int32_t a, int32_t b);
 		int32_t add_branch(int32_t cond_expr_id, int32_t positive_branch_expr_id, int32_t negative_branch_expr_id);
 		int32_t get_zero_idx();

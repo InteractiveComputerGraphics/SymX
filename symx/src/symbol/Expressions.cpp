@@ -38,15 +38,15 @@ int32_t Expressions::declare_symbol()
 
 	return expr_id;
 }
-int32_t Expressions::declare_constant_float(double constant)
+int32_t Expressions::declare_constant_float(double val)
 {
 	// Check if it is zero
-	if (std::abs(constant) < 10.0 * std::numeric_limits<double>::epsilon()) {
+	if (std::abs(val) < 10.0 * std::numeric_limits<double>::epsilon()) {
 		return this->get_zero_idx();
 	}
 
 	// Check if it is one
-	else if (std::abs(constant - 1.0) < 10.0 * std::numeric_limits<double>::epsilon()) {
+	else if (std::abs(val - 1.0) < 10.0 * std::numeric_limits<double>::epsilon()) {
 		return this->get_one_idx();
 	}
 
@@ -54,7 +54,7 @@ int32_t Expressions::declare_constant_float(double constant)
 	else {
 		// Create the Expr
 		Expr expr(ExprType::ConstantFloat, 0, 0, 0);
-		expr.pack_double(constant);
+		expr.pack_double(val);
 		return this->_find_or_add(expr);
 	}
 }

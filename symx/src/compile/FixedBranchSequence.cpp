@@ -8,7 +8,7 @@ void symx::core::Op::print(const std::vector<Op>& ops)
 		case ExprType::Symbol:
 			std::cout << op.dst << " <- " << "out(" << op.a << ");" << std::endl; break;
 		case ExprType::ConstantFloat:
-			std::cout << op.dst << " <- " << "set(" << op.constant << ");" << std::endl; break;
+			std::cout << op.dst << " <- " << "set(" << op.const_val << ");" << std::endl; break;
 		case ExprType::Add:
 			std::cout << op.dst << " <- " << "add(" << op.a << ", " << op.b << ");" << std::endl; break;
 		case ExprType::Sub:

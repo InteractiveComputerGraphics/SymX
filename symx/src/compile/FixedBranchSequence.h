@@ -48,9 +48,9 @@ namespace symx
 			int32_t a = -1;
 			int32_t b = -1;
 			int32_t cond = -1;
-			double constant = 0.0;  // In case the operation is a constant
-			Op(const ExprType type, const int32_t dst, const int32_t a, const int32_t b, const double constant = 0.0, const int32_t cond = 0)
-				: type(type), dst(dst), a(a), b(b), constant(constant), cond(cond) {};
+			double const_val = 0.0;  // In case the operation is a constant
+			Op(const ExprType type, const int32_t dst, const int32_t a, const int32_t b, const double const_val = 0.0, const int32_t cond = 0)
+				: type(type), dst(dst), a(a), b(b), const_val(const_val), cond(cond) {};
 			Op() = default;
 			
 			bool is_positive_branch() const
