@@ -96,7 +96,7 @@ return
     };
 ```
 
-As described in [Symbol-Data Maps](mapped_workspace.md#summation), `MappedWorkspace` provides _summation_ facilities that allows for easy and efficient implementation of numerical integration.
+As described in [Symbol-Data Maps](symbol_data_maps.md), `MappedWorkspace` provides _summation_ facilities that allows for easy and efficient implementation of numerical integration.
 Note that SymX's summation is also _symbolic_ and **not** unrolled, which would explode the number of operations.
 Differentiation is efficiently handled as a summation.
 

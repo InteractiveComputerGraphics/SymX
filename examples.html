@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="prev" title="Newton’s Method" href="newtons_method.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="prev" title="Inverse Simulation" href="inverse_simulation.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
@@ -198,25 +198,31 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul class="current">
@@ -343,6 +349,14 @@ The solver finds the solution for FEM element types Tet4, Hex8, Tet10, and Hex27
 <p>Showcases how to use the high-level <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code> to solve FEM problems compactly and with minimal involvement from the user.</p>
 </section>
 <hr class="docutils" />
+<section id="inverse-cantilever">
+<h2>Inverse Cantilever<a class="headerlink" href="#inverse-cantilever" title="Link to this heading">¶</a></h2>
+<p><img alt="Muscle" src="_images/muscle.jpg" /></p>
+<p><strong>File:</strong> <a class="reference download internal" download="" href="_downloads/a1a36491a42db271fd4205b8a3ede8a4/cantilever_adjoint.cpp"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">cantilever_adjoint.cpp</span></code></span></a></p>
+<p>Recovers a cantilever’s density from a target gravity deformation using a Newton equilibrium solve, an adjoint gradient, and outer L-BFGS optimization.
+The same file includes a muscle-control inverse problem (result above) where the inverse simulation optimizes the active muscle fibers along a deformable elastic muscle so that the tip is at a target position marked with a red cube.</p>
+</section>
+<hr class="docutils" />
 <section id="dynamic-elasticity-with-contact">
 <h2>Dynamic Elasticity with Contact<a class="headerlink" href="#dynamic-elasticity-with-contact" title="Link to this heading">¶</a></h2>
 <p><img alt="Dynamic elasticity with contact" src="_images/dynamic_with_contact.jpg" /></p>
@@ -359,14 +373,14 @@ The simulation uses implicit (backward Euler) time integration, stable Neo-Hooke
         
         <div class="related-pages">
           
-          <a class="prev-page" href="newtons_method.html">
+          <a class="prev-page" href="inverse_simulation.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Newton’s Method</div>
+                <div class="title">Inverse Simulation</div>
                 
               </div>
             </a>
@@ -408,6 +422,7 @@ The simulation uses implicit (backward Euler) time integration, stable Neo-Hooke
 <li><a class="reference internal" href="#xpbd-cloth-simulation">XPBD Cloth Simulation</a></li>
 <li><a class="reference internal" href="#neohookean-global-assembly-benchmark">NeoHookean — Global Assembly Benchmark</a></li>
 <li><a class="reference internal" href="#rubber-extrusion">Rubber Extrusion</a></li>
+<li><a class="reference internal" href="#inverse-cantilever">Inverse Cantilever</a></li>
 <li><a class="reference internal" href="#dynamic-elasticity-with-contact">Dynamic Elasticity with Contact</a></li>
 </ul>
 </li>

@@ -198,25 +198,31 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -265,18 +271,19 @@
     <img src="_static/symx1920.png" alt="SymX Logo" style="width:75%;">
 </p>
 <p>Welcome to the SymX documentation pages.
-SymX is a C++ library for <strong>symbolic differentiation</strong>, <strong>code generation</strong>, and <strong>evaluation</strong>, designed primarily for non-linear optimization in physics simulation and FEM.
+SymX is a C++ library for <strong>symbolic differentiation</strong>, <strong>code generation</strong>, and <strong>evaluation</strong>, designed primarily for non-linear optimization, FEM, and differentiable simulation.
 Check out the <a class="reference external" href="https://github.com/InteractiveComputerGraphics/SymX">SymX GitHub repo</a>.</p>
 <p>In these pages you will find an overview on how SymX works and how to use it through its levels of abstraction.
 Every explanation comes with example snippets.
 Note that this is more of a tutorial or a walkthrough than an extensive documentation in a traditional <em>Doxygen sense</em>.</p>
 <p>Another important goal of this guide is to help you assess whether SymX can be useful to you.
 There are many different ways to use symbolics, differentiation and just-in-time compilation, and SymX supports a few use cases out-of-the-box.
-There are three entry points available in SymX:</p>
+There are four entry points available in SymX:</p>
 <ol class="arabic simple">
 <li><p><strong>Single Expression:</strong> Compose a symbolic expression (possibly differentiated), compile it, set values, run it, read the output.</p></li>
 <li><p><strong>Stencil-based Loops:</strong> Compose a symbolic expression (possibly differentiated) to be evaluated in a loop over many instances of an stencil. This is the core of FEM assemblers and iterative predictor/corrector solvers such as Jacobi or Gauss-Seidel.</p></li>
-<li><p><strong>Non-linear Optimization:</strong> Define potentials + discretizations + degrees of freedom and let SymX find the global solution using Newton’s Method. It will take care of differentiation, compilation and evaluation automatically.</p></li>
+<li><p><strong>Global Optimization:</strong> Define potentials, discretizations, and degrees of freedom and let SymX minimize a global objective with Newton’s Method or a first-order optimizer. It takes care of differentiation, compilation, and evaluation automatically.</p></li>
+<li><p><strong>Differentiable Simulation:</strong> Define an equilibrium simulation and a loss on its outcome. SymX differentiates through the converged solve with the adjoint method, making inverse problems with many parameters practical.</p></li>
 </ol>
 <p>Depending on your use case, you might choose to skip parts of this tutorial.</p>
 <section id="table-of-contents">
@@ -286,31 +293,39 @@ There are three entry points available in SymX:</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">

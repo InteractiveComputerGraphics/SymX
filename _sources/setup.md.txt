@@ -5,7 +5,8 @@ It bundles all its dependencies (Eigen, fmt) so nothing else needs to be install
 At runtime, SymX uses your system compiler as a JIT back-end to compile generated code — on Linux and macOS it
 finds `g++` automatically.
 On Windows, it will check common locations of the MSVC compiler.
-In any case, you can always specify SymX which compiler to use (see [Compiler path](#compiler-path) below).
+In any case, you can always specify SymX which compiler to use; see the
+Compiler path section below.
 
 
 ## Project structure
@@ -45,6 +46,9 @@ build/examples/examples   # Examples
 | `SYMX_COMPILER_PATH` | `AUTO` | Compiler used for JIT code generation at runtime |
 | `SYMX_CODEGEN_DIR` | *(empty)* | Output directory for generated files; defaults to `<build>/codegen` |
 | `SYMX_HESS_STORAGE_FLOAT` | `double` | Hessian storage precision (`float` or `double`) |
+| `SYMX_ENABLE_MKL` | `OFF` | Use oneMKL/PARDISO for direct sparse LLT solves |
+| `SYMX_MKL_DIR` | *(empty)* | Optional directory containing `MKLConfig.cmake` |
+| `SYMX_STACK_SIZE` | `10480000` | Linker stack reservation for generated expressions |
 
 
 ### AVX2 support
@@ -61,9 +65,17 @@ If you try to compile on a non-AVX2 system with `ON`, you will get something lik
 
 ### `float` Hessian approximation (performance)
 Using `SYMX_HESS_STORAGE_FLOAT=float` lets SymX store the global Hessian used in Newton's Method in single point precision.
-Importantly, all _operations_ are still performed in `double` (via casting). 
+Importantly, all _operations_ are still performed in `double` (via casting).
 This option simply quantizes the global matrix values to `float`, halving memory traffic and significantly increasing performance.
 The default remains `double` as very numerically stiff problems might require it, but the user is encouraged to assess whether `float` works for their application.
+
+### MKL and stack size
+Set `-DSYMX_ENABLE_MKL=ON` to use Eigen's PARDISO path through oneMKL. If
+CMake cannot discover oneMKL itself, set `-DSYMX_MKL_DIR` to the directory
+containing `MKLConfig.cmake`. MKL remains optional and off by default.
+
+`SYMX_STACK_SIZE` controls the linker stack reservation. Increase it only for
+exceptionally large generated expressions that exhaust the platform default.
 
 
 ## Compiler path
@@ -132,7 +144,7 @@ symx::print_compiler_diagnostics();
 ```
 
 The output looks like this:
-```txt
+```text
 Compiler Path: g++
      Available: Yes
      Could Compile Test Program: Yes
@@ -153,7 +165,7 @@ symx::print_compiler_help();   // prints a numbered checklist of common fixes
 ```
 
 which outputs
-```txt
+```text
 Compiler Help
 1. Ensure you have a C++ compiler installed (e.g., g++, clang++, MSVC).
 2. Make sure the compiler supports C++17 or higher.

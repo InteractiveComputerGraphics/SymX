@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Architecture Overview" href="diagram.html"><link rel="prev" title="Hello World" href="hello_world.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Architecture Overview" href="architecture_overview.html"><link rel="prev" title="Hello World" href="hello_world.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
@@ -198,25 +198,31 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -266,7 +272,8 @@ It bundles all its dependencies (Eigen, fmt) so nothing else needs to be install
 At runtime, SymX uses your system compiler as a JIT back-end to compile generated code — on Linux and macOS it
 finds <code class="docutils literal notranslate"><span class="pre">g++</span></code> automatically.
 On Windows, it will check common locations of the MSVC compiler.
-In any case, you can always specify SymX which compiler to use (see <a class="reference internal" href="#compiler-path"><span class="xref myst">Compiler path</span></a> below).</p>
+In any case, you can always specify SymX which compiler to use; see the
+Compiler path section below.</p>
 <section id="project-structure">
 <h2>Project structure<a class="headerlink" href="#project-structure" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
@@ -338,6 +345,18 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 <td><p><code class="docutils literal notranslate"><span class="pre">double</span></code></p></td>
 <td><p>Hessian storage precision (<code class="docutils literal notranslate"><span class="pre">float</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>)</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_MKL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OFF</span></code></p></td>
+<td><p>Use oneMKL/PARDISO for direct sparse LLT solves</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_MKL_DIR</span></code></p></td>
+<td><p><em>(empty)</em></p></td>
+<td><p>Optional directory containing <code class="docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_STACK_SIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10480000</span></code></p></td>
+<td><p>Linker stack reservation for generated expressions</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -358,6 +377,14 @@ Override explicitly with <code class="docutils literal notranslate"><span class=
 Importantly, all <em>operations</em> are still performed in <code class="docutils literal notranslate"><span class="pre">double</span></code> (via casting).
 This option simply quantizes the global matrix values to <code class="docutils literal notranslate"><span class="pre">float</span></code>, halving memory traffic and significantly increasing performance.
 The default remains <code class="docutils literal notranslate"><span class="pre">double</span></code> as very numerically stiff problems might require it, but the user is encouraged to assess whether <code class="docutils literal notranslate"><span class="pre">float</span></code> works for their application.</p>
+</section>
+<section id="mkl-and-stack-size">
+<h3>MKL and stack size<a class="headerlink" href="#mkl-and-stack-size" title="Link to this heading">¶</a></h3>
+<p>Set <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_MKL=ON</span></code> to use Eigen’s PARDISO path through oneMKL. If
+CMake cannot discover oneMKL itself, set <code class="docutils literal notranslate"><span class="pre">-DSYMX_MKL_DIR</span></code> to the directory
+containing <code class="docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code>. MKL remains optional and off by default.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SYMX_STACK_SIZE</span></code> controls the linker stack reservation. Increase it only for
+exceptionally large generated expressions that exhaust the platform default.</p>
 </section>
 </section>
 <section id="compiler-path">
@@ -422,7 +449,7 @@ Enable it to see the raw compiler output:</p>
 </pre></div>
 </div>
 <p>The output looks like this:</p>
-<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>Compiler Path: g++
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Compiler Path: g++
      Available: Yes
      Could Compile Test Program: Yes
      Could Load Test Program: Yes
@@ -439,7 +466,7 @@ Enable it to see the raw compiler output:</p>
 </pre></div>
 </div>
 <p>which outputs</p>
-<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>Compiler Help
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Compiler Help
 1. Ensure you have a C++ compiler installed (e.g., g++, clang++, MSVC).
 2. Make sure the compiler supports C++17 or higher.
 3. If using SIMD features, ensure the compiler supports AVX instructions.
@@ -460,7 +487,7 @@ Enable it to see the raw compiler output:</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="diagram.html">
+          <a class="next-page" href="architecture_overview.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
@@ -516,6 +543,7 @@ Enable it to see the raw compiler output:</p>
 <li><a class="reference internal" href="#cmake-options">CMake options</a><ul>
 <li><a class="reference internal" href="#avx2-support">AVX2 support</a></li>
 <li><a class="reference internal" href="#float-hessian-approximation-performance"><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation (performance)</a></li>
+<li><a class="reference internal" href="#mkl-and-stack-size">MKL and stack size</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#compiler-path">Compiler path</a><ul>

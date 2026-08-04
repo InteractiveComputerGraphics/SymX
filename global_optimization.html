@@ -3,11 +3,11 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="FEM Integration" href="fem_integration.html"><link rel="prev" title="Loops" href="compiled_in_loop.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="FEM Integration" href="fem_integration.html"><link rel="prev" title="Loops" href="loops.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
-        <title>Second-Order Optimization - SymX docs</title>
+        <title>Global Optimization - SymX docs</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=51155216" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -198,25 +198,31 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Second-Order Optimization</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -241,7 +247,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/second_order_optimization.md.txt" title="View this page">
+  <a class="muted-link" href="_sources/global_optimization.md.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -259,10 +265,13 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="second-order-optimization">
-<h1>Second-Order Optimization<a class="headerlink" href="#second-order-optimization" title="Link to this heading">¶</a></h1>
+          <section class="tex2jax_ignore mathjax_ignore" id="global-optimization">
+<h1>Global Optimization<a class="headerlink" href="#global-optimization" title="Link to this heading">¶</a></h1>
 <p>SymX was designed to find the solution to large and complex non-linear optimization problems.
 While it is not the only thing it can do, it is the main focus and where most of the advanced infrastructure lies.</p>
+<p>This layer starts from a <code class="docutils literal notranslate"><span class="pre">GlobalPotential</span></code>: a global objective assembled from symbolic element energies.
+Use <a class="reference internal" href="newtons_method.html"><span class="std std-doc">Newton’s method</span></a> when its Hessian is useful, or <a class="reference internal" href="first_order_optimization.html"><span class="std std-doc">first-order optimization</span></a> when a gradient method is the better fit.
+The next layer, <a class="reference internal" href="adjoint_method.html"><span class="std std-doc">differentiable simulation</span></a>, uses a converged Newton solve as the state of an inverse problem.</p>
 <p>Consider the problem</p>
 <div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
@@ -344,7 +353,7 @@ Once the problem is defined, it is passed to <code class="docutils literal notra
 <span class="p">);</span>
 </pre></div>
 </div>
-<p>Potential function definitions use <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> and <code class="docutils literal notranslate"><span class="pre">Element</span></code>, introduced in <a class="reference internal" href="symbol_data.html"><span class="std std-doc">Symbol-Data Maps</span></a>, within a lambda.
+<p>Potential function definitions use <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> and <code class="docutils literal notranslate"><span class="pre">Element</span></code>, introduced in <a class="reference internal" href="symbol_data_overview.html"><span class="std std-doc">Symbol-Data Maps</span></a>, within a lambda.
 This time however, these are managed by <code class="docutils literal notranslate"><span class="pre">GlobalPotential</span></code> in order to automate differentiation and evaluation later on.
 Multiple potentials can be added freely, and together they form <span class="math notranslate nohighlight">\(G = \sum_p P_p\)</span>.</p>
 </section>
@@ -398,7 +407,7 @@ At any point the flat DoF vector can be read and written:</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="compiled_in_loop.html">
+          <a class="prev-page" href="loops.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
@@ -439,7 +448,7 @@ At any point the flat DoF vector can be read and written:</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Second-Order Optimization</a><ul>
+<li><a class="reference internal" href="#">Global Optimization</a><ul>
 <li><a class="reference internal" href="#newton-s-method">Newton’s Method</a><ul>
 <li><a class="reference internal" href="#main-components">Main components:</a></li>
 </ul>

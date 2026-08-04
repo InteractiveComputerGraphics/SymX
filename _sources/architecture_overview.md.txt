@@ -16,6 +16,7 @@ classDef expr  fill:#dcfce7,stroke:#22c55e,stroke-width:1.5px,color:#064e3b
 classDef comp  fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
 classDef map   fill:#fef9c3,stroke:#eab308,stroke-width:1.5px,color:#713f12
 classDef solve fill:#ffe4e6,stroke:#fb7185,stroke-width:1.5px,color:#881337
+classDef diff  fill:#f3e8ff,stroke:#a855f7,stroke-width:1.5px,color:#581c87
 
 CO["Compiled&lt;T&gt;"]:::comp
 
@@ -31,6 +32,11 @@ DM["DataMap&lt;T&gt;"]:::map
 POT["Potential"]:::solve
 GP["GlobalPotential"]:::solve
 NM["NewtonsMethod"]:::solve
+FO["FirstOrderOptimizer"]:::solve
+LOSSPOT["Loss Potential"]:::diff
+LOSS["Loss GlobalPotential"]:::diff
+AN["AdjointNewton"]:::diff
+AFO["FirstOrderOptimizerAdjoint"]:::diff
 
 WS ==>|"creates"| SC
 WS ==>|"creates"| VE
@@ -45,6 +51,11 @@ CIL ==>|"has one"| MW
 GP ==>|"has many"| POT
 NM ==>|"has one"| GP
 NM ==>|"has many"| CIL
+FO ==>|"has one"| GP
+AN ==>|"reuses"| NM
+AN ==>|"has one"| LOSS
+LOSS ==>|"has many"| LOSSPOT
+AFO ==>|"has one"| AN
 ```
 
 ## Layer 1 (Green) · Expression Building
@@ -78,7 +89,7 @@ You process the output in a (inlined) callback function.
 
 This layer is still generic and powerful, but it is made convenient by handling loop evaluation and hardware optimizations.
 
-## Layer 4 (Red) · Second–Order Solver
+## Layer 4 (Red) · Global Optimization
 
 - **Representative Classes:** `NewtonsMethod`, `GlobalPotential`
 - **Use case:** You want SymX to solve a second-order optimization problem end-to-end.
@@ -86,3 +97,15 @@ This layer is still generic and powerful, but it is made convenient by handling 
 You declare energy potentials and degrees of freedom in a `GlobalPotential`.
 Each potential is defined by a connectivity array and symbolic expression.
 `NewtonsMethod` then takes care of everything else: symbolic differentiation, code generation, compilation (with caching), element-level assembly, projection to positive-definite Hessians, global linear system solve, and line search.
+
+For objectives where a first-order method is preferable, `FirstOrderOptimizer` uses the same potential and DoF declaration with Gradient Descent, Adam, VectorAdam, or L-BFGS.
+
+## Layer 5 (Purple) · Differentiable Simulation
+
+- **Representative Classes:** `AdjointNewton`, `FirstOrderOptimizerAdjoint`
+- **Use case:** You want gradients of a loss that depends on a converged simulation.
+
+`AdjointNewton` combines a Newton equilibrium solve with a separate loss potential and evaluates the total derivative with respect to loss parameters. 
+`FirstOrderOptimizerAdjoint` then uses those gradients to solve inverse problems.
+The forward simulation remains a normal `NewtonsMethod`; the adjoint layer is the bridge that makes its outcome differentiable.
+

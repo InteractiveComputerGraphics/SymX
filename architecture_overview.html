@@ -203,20 +203,26 @@
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -241,7 +247,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/diagram.md.txt" title="View this page">
+  <a class="muted-link" href="_sources/architecture_overview.md.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -275,6 +281,7 @@ classDef expr  fill:#dcfce7,stroke:#22c55e,stroke-width:1.5px,color:#064e3b
 classDef comp  fill:#dbeafe,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a
 classDef map   fill:#fef9c3,stroke:#eab308,stroke-width:1.5px,color:#713f12
 classDef solve fill:#ffe4e6,stroke:#fb7185,stroke-width:1.5px,color:#881337
+classDef diff  fill:#f3e8ff,stroke:#a855f7,stroke-width:1.5px,color:#581c87
 
 CO[&quot;Compiled&amp;lt;T&amp;gt;&quot;]:::comp
 
@@ -290,6 +297,11 @@ DM[&quot;DataMap&amp;lt;T&amp;gt;&quot;]:::map
 POT[&quot;Potential&quot;]:::solve
 GP[&quot;GlobalPotential&quot;]:::solve
 NM[&quot;NewtonsMethod&quot;]:::solve
+FO[&quot;FirstOrderOptimizer&quot;]:::solve
+LOSSPOT[&quot;Loss Potential&quot;]:::diff
+LOSS[&quot;Loss GlobalPotential&quot;]:::diff
+AN[&quot;AdjointNewton&quot;]:::diff
+AFO[&quot;FirstOrderOptimizerAdjoint&quot;]:::diff
 
 WS ==&gt;|&quot;creates&quot;| SC
 WS ==&gt;|&quot;creates&quot;| VE
@@ -304,6 +316,11 @@ CIL ==&gt;|&quot;has one&quot;| MW
 GP ==&gt;|&quot;has many&quot;| POT
 NM ==&gt;|&quot;has one&quot;| GP
 NM ==&gt;|&quot;has many&quot;| CIL
+FO ==&gt;|&quot;has one&quot;| GP
+AN ==&gt;|&quot;reuses&quot;| NM
+AN ==&gt;|&quot;has one&quot;| LOSS
+LOSS ==&gt;|&quot;has many&quot;| LOSSPOT
+AFO ==&gt;|&quot;has one&quot;| AN
     </pre></section>
 <section id="layer-1-green-expression-building">
 <h2>Layer 1 (Green) · Expression Building<a class="headerlink" href="#layer-1-green-expression-building" title="Link to this heading">¶</a></h2>
@@ -338,8 +355,8 @@ Parallelism (OpenMP), SIMD batching, and gather/scatter are handled internally.
 You process the output in a (inlined) callback function.</p>
 <p>This layer is still generic and powerful, but it is made convenient by handling loop evaluation and hardware optimizations.</p>
 </section>
-<section id="layer-4-red-secondorder-solver">
-<h2>Layer 4 (Red) · Second–Order Solver<a class="headerlink" href="#layer-4-red-secondorder-solver" title="Link to this heading">¶</a></h2>
+<section id="layer-4-red-global-optimization">
+<h2>Layer 4 (Red) · Global Optimization<a class="headerlink" href="#layer-4-red-global-optimization" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Representative Classes:</strong> <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code>, <code class="docutils literal notranslate"><span class="pre">GlobalPotential</span></code></p></li>
 <li><p><strong>Use case:</strong> You want SymX to solve a second-order optimization problem end-to-end.</p></li>
@@ -347,6 +364,17 @@ You process the output in a (inlined) callback function.</p>
 <p>You declare energy potentials and degrees of freedom in a <code class="docutils literal notranslate"><span class="pre">GlobalPotential</span></code>.
 Each potential is defined by a connectivity array and symbolic expression.
 <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code> then takes care of everything else: symbolic differentiation, code generation, compilation (with caching), element-level assembly, projection to positive-definite Hessians, global linear system solve, and line search.</p>
+<p>For objectives where a first-order method is preferable, <code class="docutils literal notranslate"><span class="pre">FirstOrderOptimizer</span></code> uses the same potential and DoF declaration with Gradient Descent, Adam, VectorAdam, or L-BFGS.</p>
+</section>
+<section id="layer-5-purple-differentiable-simulation">
+<h2>Layer 5 (Purple) · Differentiable Simulation<a class="headerlink" href="#layer-5-purple-differentiable-simulation" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Representative Classes:</strong> <code class="docutils literal notranslate"><span class="pre">AdjointNewton</span></code>, <code class="docutils literal notranslate"><span class="pre">FirstOrderOptimizerAdjoint</span></code></p></li>
+<li><p><strong>Use case:</strong> You want gradients of a loss that depends on a converged simulation.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">AdjointNewton</span></code> combines a Newton equilibrium solve with a separate loss potential and evaluates the total derivative with respect to loss parameters.
+<code class="docutils literal notranslate"><span class="pre">FirstOrderOptimizerAdjoint</span></code> then uses those gradients to solve inverse problems.
+The forward simulation remains a normal <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code>; the adjoint layer is the bridge that makes its outcome differentiable.</p>
 </section>
 </section>
 
@@ -410,7 +438,8 @@ Each potential is defined by a connectivity array and symbolic expression.
 <li><a class="reference internal" href="#layer-1-green-expression-building">Layer 1 (Green) · Expression Building</a></li>
 <li><a class="reference internal" href="#layer-2-blue-lowlevel-compilation">Layer 2 (Blue) · Low–level Compilation</a></li>
 <li><a class="reference internal" href="#layer-3-yellow-symboldata-maps">Layer 3 (Yellow) · Symbol–Data Maps</a></li>
-<li><a class="reference internal" href="#layer-4-red-secondorder-solver">Layer 4 (Red) · Second–Order Solver</a></li>
+<li><a class="reference internal" href="#layer-4-red-global-optimization">Layer 4 (Red) · Global Optimization</a></li>
+<li><a class="reference internal" href="#layer-5-purple-differentiable-simulation">Layer 5 (Purple) · Differentiable Simulation</a></li>
 </ul>
 </li>
 </ul>

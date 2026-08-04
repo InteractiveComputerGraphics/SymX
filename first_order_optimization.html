@@ -3,11 +3,11 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Symbol-Data Maps" href="mapped_workspace.html"><link rel="prev" title="Compilation" href="compilation.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="The Adjoint Method" href="adjoint_method.html"><link rel="prev" title="Newton’s Method" href="newtons_method.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
-        <title>Symbol-Data Overview - SymX docs</title>
+        <title>First-order optimization - SymX docs</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=51155216" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -173,7 +173,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
       </label>
     </div>
@@ -198,25 +198,31 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
-<ul class="current">
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -241,7 +247,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="_sources/symbol_data.md.txt" title="View this page">
+  <a class="muted-link" href="_sources/first_order_optimization.md.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -254,20 +260,59 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section class="tex2jax_ignore mathjax_ignore" id="symbol-data-overview">
-<h1>Symbol-Data Overview<a class="headerlink" href="#symbol-data-overview" title="Link to this heading">¶</a></h1>
-<p>Building compiled functions from differentiated expressions already covers a lot of ground, but in practice you rarely need just one function on one input.
-SymX provides a higher-level entry point for loop evaluation over many data instances:</p>
+          <section class="tex2jax_ignore mathjax_ignore" id="first-order-optimization">
+<h1>First-order optimization<a class="headerlink" href="#first-order-optimization" title="Link to this heading">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">FirstOrderOptimizer</span></code> directly minimises a <code class="docutils literal notranslate"><span class="pre">GlobalPotential</span></code> without the need of second-order derivatives.
+This is useful in the cases where Hessian calculation is too complex or unstable.
+First order runs are also useful for visualization and debugging as they usually produce a smoother progression of the minimization process than Newton’s method.</p>
+<section id="basic-use">
+<h2>Basic use<a class="headerlink" href="#basic-use" title="Link to this heading">¶</a></h2>
+<p>Define the potential and its DoF sets in the usual way, then construct the optimizer with the same context and optional callbacks used by Newton’s method:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">spGlobalPotential</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">GlobalPotential</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
+<span class="c1">// objective-&gt;add_potential(...);</span>
+<span class="c1">// objective-&gt;add_dof(variables, &quot;variables&quot;);</span>
+
+<span class="nc">spContext</span><span class="w"> </span><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Context</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">optimizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FirstOrderOptimizer</span><span class="o">::</span><span class="nf">create</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">);</span>
+<span class="n">optimizer</span><span class="o">-&gt;</span><span class="n">settings</span><span class="p">.</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FirstOrderOptType</span><span class="o">::</span><span class="n">LBFGS</span><span class="p">;</span>
+<span class="nc">SolverReturn</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optimizer</span><span class="o">-&gt;</span><span class="nf">solve</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The optimizer compiles the potential value and direct gradient once.
+Each iteration evaluates both, selects a descent direction, and applies the normal step cap, maximum-step callback, intermediate-state check, and optional Armijo backtracking.
+A rejected or failed line search restores the exact DoFs that were accepted before that trial.</p>
+</section>
+<section id="algorithms-and-settings">
+<h2>Algorithms and settings<a class="headerlink" href="#algorithms-and-settings" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">FirstOrderSettings</span></code> is shared by the direct and adjoint optimizers.
+Its default is <code class="docutils literal notranslate"><span class="pre">LBFGS</span></code>; the available values are:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code>: Creates SymX symbols bound to user data, automating value passing to compiled functions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CompiledInLoop</span></code>: Evaluates expressions in stencil-based loops. Handles parallelism, vectorization, different compilation types, and more.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GradientDescent</span></code>: <code class="docutils literal notranslate"><span class="pre">-learning_rate</span> <span class="pre">*</span> <span class="pre">gradient</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Adam</span></code>: component-wise adaptive moments.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VectorAdam</span></code>: adaptive moments with one second-moment value per fixed-size vector block.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LBFGS</span></code>: limited-memory quasi-Newton directions with normalized steepest descent for the first step.</p></li>
 </ul>
-<p>Together, these let you evaluate arbitrary expressions over entire discretizations without writing the evaluation loop yourself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">VectorAdam</span></code> keeps each DoF set separate when creating blocks.
+Therefore every DoF set must be divisible by <code class="docutils literal notranslate"><span class="pre">settings.vector_adam.vector_block_size</span></code>; invalid block configurations throw <code class="docutils literal notranslate"><span class="pre">std::invalid_argument</span></code>.
+This preserves vector rotation behavior for three-dimensional fields while allowing scalar parameter sets to use a block size of one.</p>
+<p>L-BFGS uses <code class="docutils literal notranslate"><span class="pre">history_size</span></code>, <code class="docutils literal notranslate"><span class="pre">bootstrap_step_length</span></code>, and <code class="docutils literal notranslate"><span class="pre">curvature_threshold</span></code>.
+Curvature pairs whose <code class="docutils literal notranslate"><span class="pre">y.dot(s)</span></code> is not larger than the threshold are discarded.
+If a produced direction is not a descent direction, <code class="docutils literal notranslate"><span class="pre">restart_when_non_descent</span></code> resets the algorithm state and retries with the default steepest-descent direction.</p>
+</section>
+<section id="callbacks-results-and-diagnostics">
+<h2>Callbacks, results, and diagnostics<a class="headerlink" href="#callbacks-results-and-diagnostics" title="Link to this heading">¶</a></h2>
+<p>The direct optimizer accepts <code class="docutils literal notranslate"><span class="pre">SolverCallbacks</span></code>. It invokes <code class="docutils literal notranslate"><span class="pre">before_step</span></code> and <code class="docutils literal notranslate"><span class="pre">after_step</span></code> as a pair for every attempted iteration, and invokes
+<code class="docutils literal notranslate"><span class="pre">before_energy_evaluation</span></code> before each value or gradient evaluation.
+The normal validity, maximum-step, Armijo-failure, convergence, and residual callbacks have the same meanings as in <a class="reference internal" href="newtons_method.html"><span class="std std-doc">Newton’s method</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">solve()</span></code> returns <code class="docutils literal notranslate"><span class="pre">SolverReturn</span></code>.
+Invalid initial values or gradients return <code class="docutils literal notranslate"><span class="pre">InvalidInitialState</span></code>; failed intermediate-state or Armijo searches return the corresponding line-search status after restoring the prior DoFs.
+<code class="docutils literal notranslate"><span class="pre">get_last_solve_stats()</span></code> exposes iteration, line-search, and rejected L-BFGS history counts. <code class="docutils literal notranslate"><span class="pre">print_summary()</span></code> formats the accumulated logger statistics.</p>
+</section>
 </section>
 
         </article>
@@ -275,23 +320,23 @@ SymX provides a higher-level entry point for loop evaluation over many data inst
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="mapped_workspace.html">
+          <a class="next-page" href="adjoint_method.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Symbol-Data Maps</div>
+                <div class="title">The Adjoint Method</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="compilation.html">
+          <a class="prev-page" href="newtons_method.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Compilation</div>
+                <div class="title">Newton’s Method</div>
                 
               </div>
             </a>
@@ -313,8 +358,29 @@ SymX provides a higher-level entry point for loop evaluation over many data inst
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">First-order optimization</a><ul>
+<li><a class="reference internal" href="#basic-use">Basic use</a></li>
+<li><a class="reference internal" href="#algorithms-and-settings">Algorithms and settings</a></li>
+<li><a class="reference internal" href="#callbacks-results-and-diagnostics">Callbacks, results, and diagnostics</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

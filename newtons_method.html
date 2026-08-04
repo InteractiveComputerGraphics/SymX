@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Examples" href="examples.html"><link rel="prev" title="FEM Integration" href="fem_integration.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="First-order optimization" href="first_order_optimization.html"><link rel="prev" title="FEM Integration" href="fem_integration.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
@@ -198,25 +198,31 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="hello_world.html">Hello World</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="diagram.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Core Concepts (Layers 1, 2)</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="symbols.html">Symbols</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api_scalar_vector_matrix.html">Symbol Reference API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_reference_api.html">Symbol Reference API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="compilation.html">Compilation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Symbol-Data Maps (Layer 3)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="symbol_data.html">Symbol-Data Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mapped_workspace.html">Symbol-Data Maps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="compiled_in_loop.html">Loops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_overview.html">Symbol-Data Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="symbol_data_maps.html">Symbol-Data Maps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loops.html">Loops</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Second-Order Solver (Layer 4)</span></p>
+<p class="caption" role="heading"><span class="caption-text">Global Optimization (Layer 4)</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="second_order_optimization.html">Second-Order Optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global_optimization.html">Global Optimization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Newton’s Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="adjoint_method.html">The Adjoint Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse_simulation.html">Inverse Simulation</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
@@ -416,8 +422,19 @@ While it is naturally possible to use SymX in third-party solvers, the built-in 
 </section>
 <section id="settings">
 <h3>Settings<a class="headerlink" href="#settings" title="Link to this heading">¶</a></h3>
-<p>The following are all the settings exposed as <code class="docutils literal notranslate"><span class="pre">NewtonsMethod.settings</span></code>:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">NewtonSettings</span>
+<p>The following are all the settings exposed as <code class="docutils literal notranslate"><span class="pre">NewtonsMethod.settings</span></code>.
+<code class="docutils literal notranslate"><span class="pre">NewtonSettings</span></code> inherits from <code class="docutils literal notranslate"><span class="pre">SolverSettings</span></code> and <code class="docutils literal notranslate"><span class="pre">LinearSolveSettings</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">LinearSolveSettings</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="nc">LinearSolver</span><span class="w"> </span><span class="n">linear_solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">LinearSolver</span><span class="o">::</span><span class="n">BDPCG</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cg_max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">cg_abs_tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">cg_rel_tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-4</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cg_stop_on_indefiniteness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">bailout_residual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">NewtonSettings</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">SolverSettings</span><span class="p">,</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">LinearSolveSettings</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="c1">// Iteration limits</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span>
@@ -449,13 +466,7 @@ While it is naturally possible to use SymX in third-party solvers, the built-in 
 <span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">ppn_tightening_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">ppn_release_factor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="p">;</span>
 
-<span class="w">    </span><span class="c1">// Linear solver</span>
-<span class="w">    </span><span class="nc">LinearSolver</span><span class="w"> </span><span class="n">linear_solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">LinearSolver</span><span class="o">::</span><span class="n">BDPCG</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">cg_max_iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10000</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">cg_abs_tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">cg_rel_tolerance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-4</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">cg_stop_on_indefiniteness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">bailout_residual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-10</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">// Linear solver settings inherited from LinearSolveSettings</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -473,7 +484,7 @@ While it is naturally possible to use SymX in third-party solvers, the built-in 
 <li><p><code class="docutils literal notranslate"><span class="pre">print_line_search_upon_failure</span> <span class="pre">=</span> <span class="pre">true</span></code> will evaluate energy potential profiles along the line search when Armijo backtracking fails.
 A file with the line data will be written for further processing and an interactive gnuplot session will start (if available).</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">project_to_pd_use_mirroring</span> <span class="pre">=</span> <span class="pre">true</span></code> negative element Hessian eigenvalues are mirrored (<code class="docutils literal notranslate"><span class="pre">abs</span></code>), instead of clamped to <code class="docutils literal notranslate"><span class="pre">projection_eps</span></code>.</p></li>
-<li><p>While SymX supports <code class="docutils literal notranslate"><span class="pre">LinearSolver::DirectLLT</span></code> (Eigen), the default linear solver is Block Diagonal Preconditioned Conjugate Gradient (BDPCG). Further:</p>
+<li><p>While SymX supports <code class="docutils literal notranslate"><span class="pre">LinearSolver::DirectLLT</span></code> (Eigen), the default linear solver is Block Diagonal Preconditioned Conjugate Gradient (BDPCG). <code class="docutils literal notranslate"><span class="pre">LinearSolveSettings</span></code> can also be used standalone (e.g. for adjoint solves). Further:</p>
 <ul>
 <li><p>Convergence can be granted by absolute or relative residual, whatever happens first.</p></li>
 <li><p>The solver can optionally report failure if an indefinite direction is found (needed for Progressively Projected Newton).</p></li>
@@ -490,6 +501,8 @@ The following are the callback containers used:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SolverCallbacks</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">before_energy_evaluation</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">before_step</span><span class="p">;</span>
+<span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">after_step</span><span class="p">;</span>
 <span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">is_initial_state_valid</span><span class="p">;</span>
 <span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">bool</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">is_intermediate_state_valid</span><span class="p">;</span>
 <span class="w">    </span><span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">std</span><span class="o">::</span><span class="nc">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">()</span><span class="o">&gt;&gt;</span><span class="w">    </span><span class="n">on_intermediate_state_invalid</span><span class="p">;</span>
@@ -503,6 +516,8 @@ The following are the callback containers used:</p>
 <p>Brief descriptions:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">before_energy_evaluation</span></code>: Will be executed before evaluating any value or derivative. Example: it can be used to update contact pairs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">before_step</span></code>: Runs immediately before every attempted Newton step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">after_step</span></code>: Runs after every attempted Newton step, paired with <code class="docutils literal notranslate"><span class="pre">before_step</span></code> even when the step is rejected.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">is_initial_state_valid</span></code>: Exits the Newton process before it starts. Example: Element inversions in the rest pose.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">is_intermediate_state_valid</span></code>: Used to backtrack invalid states in the line search. Example: element inversions as a consequence of a step.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">on_intermediate_state_invalid</span></code>: Used if the invalid state could not be backtracked after the afforded number of iterations. Example: increase penalty stiffness.</p></li>
@@ -513,7 +528,7 @@ The following are the callback containers used:</p>
 </ul>
 <p>Callbacks can be appended to those lists by using the corresponding <code class="docutils literal notranslate"><span class="pre">.add_&lt;callback_name&gt;(T</span> <span class="pre">f)</span></code> method, e.g. <code class="docutils literal notranslate"><span class="pre">.add_before_energy_evaluation(std::function&lt;void()&gt;</span> <span class="pre">f)</span></code>.
 <code class="docutils literal notranslate"><span class="pre">SolverCallbacks</span></code> can be accessed in <code class="docutils literal notranslate"><span class="pre">NewtonsMethod.callbacks</span></code>.</p>
-<p>Further, a custom residual can be specified by <code class="docutils literal notranslate"><span class="pre">.set_residual(std::function&lt;double(Eigen::VectorXd&amp;)&gt;</span> <span class="pre">f)</span></code>.</p>
+<p>Further, a custom residual can be specified by <code class="docutils literal notranslate"><span class="pre">.set_residual(std::function&lt;double(const</span> <span class="pre">Eigen::VectorXd&amp;)&gt;</span> <span class="pre">f)</span></code>.</p>
 </section>
 <section id="outputsink">
 <h3>OutputSink<a class="headerlink" href="#outputsink" title="Link to this heading">¶</a></h3>
@@ -659,12 +674,12 @@ Here is part of the output yaml file for the previous example:</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="examples.html">
+          <a class="next-page" href="first_order_optimization.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Examples</div>
+                <div class="title">First-order optimization</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

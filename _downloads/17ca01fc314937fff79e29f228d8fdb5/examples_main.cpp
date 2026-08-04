@@ -5,15 +5,21 @@ int main()
 {
     bool run_all = false;
 
+    // Small examples
     bool run_hello_world                     = true;
     bool run_NeoHookean_print                = false;
     bool run_NeoHookean_eval_comparison      = false;
     bool run_triangle_mesh_area              = false;
     bool run_NeoHookean_assembly_comparison  = false;
+
+    // Forward simulation
     bool run_xpbd_cloth_comparison           = false;
     bool run_rubber_extrusion_comparison     = false;
     bool run_dynamic_elasticity_with_contact = false;
 
+    // Inverse simulation
+    bool run_cantilever_density_id           = false;
+    bool run_cantilever_muscle_control       = false;
 
     /*
         hello_world()
@@ -99,8 +105,8 @@ int main()
         Showcases generic FEM integration in SymX, callbacks, output 
         and logs.
     */
-   if (run_all || run_rubber_extrusion_comparison) {
-       rubber_extrusion_comparison();
+    if (run_all || run_rubber_extrusion_comparison) {
+        rubber_extrusion_comparison();
     }
     
     /*
@@ -111,5 +117,28 @@ int main()
     */
     if (run_all || run_dynamic_elasticity_with_contact) {
         dynamic_elasticity_with_contact();
+    }
+
+    /*
+        cantilever_density_id_comparison()
+
+        A cantilever beam is simulated with a NeoHookean material. The
+        material density is optimized to match a target displacement.
+        Showcases the use of the adjoint method for inverse simulation.
+    */
+    if (run_all || run_cantilever_density_id) {
+        cantilever_density_id_comparison();
+    }
+
+    /*
+        cantilever_muscle_control_comparison()
+
+        A cantilever beam is simulated with an active NeoHookean material.
+        The muscle activation is optimized to match a target displacement
+        of the tip. Showcases the use of the adjoint method for inverse
+        simulation.
+    */
+    if (run_all || run_cantilever_muscle_control) {
+        cantilever_muscle_control_comparison();
     }
 }
