@@ -27,7 +27,8 @@ namespace symx
         void evaluate_P(double& out_P);
         void evaluate_P__dP_du(double& out_P, Eigen::VectorXd& out_dP_du);
         spElementHessians evaluate_P__dP_du__local_d2P_du2(double& out_P, Eigen::VectorXd& out_dP_du);
-
+        std::vector<spCompiledCondition> get_conditions() const;
         double test_derivatives_with_FD(const double h);
     };
+    using spSecondOrderCompiledGlobal = std::shared_ptr<SecondOrderCompiledGlobal>;
 } // namespace symx

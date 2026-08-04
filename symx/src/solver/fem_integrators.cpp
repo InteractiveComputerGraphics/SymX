@@ -41,6 +41,10 @@ int symx::get_stride(const FEM_Element& element)
 Matrix symx::fem_jacobian(const FEM_Element& element, std::vector<Vector>& xh, const Vector& xi)
 {
 	Vector x = fem_interpolation(element, xh, xi);
+	return fem_jacobian(element, x, xi);
+}
+Matrix symx::fem_jacobian(const FEM_Element &element, const Vector& x, const Vector& xi)
+{
 	std::vector<Scalar> values;
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -49,7 +53,7 @@ Matrix symx::fem_jacobian(const FEM_Element& element, std::vector<Vector>& xh, c
 	}
 	return Matrix(values, { 3, 3 });
 }
-std::vector<std::array<double, 4>> symx::get_integration_rule(const FEM_Element& element)
+std::vector<std::array<double, 4>> symx::get_integration_rule(const FEM_Element &element)
 {
 	if (element == FEM_Element::Tet4) {
 		return 	

@@ -32,10 +32,6 @@ Scalar diff_impl(const Scalar& scalar, const Scalar& wrt, DiffCache& diff_cache)
 			int32_t c = scalar.expr.b;
 			return (double)(c)*u.powN(c - 1) * du;
 		}
-		else if (scalar.expr.type == ExprType::PowF) {
-			std::cout << "symx error: ExprType::PowF not supported for diff_impl." << std::endl;
-			exit(-1);
-		}
 
 		// Regular operations
 		const Scalar u = scalar.left();
@@ -53,6 +49,8 @@ Scalar diff_impl(const Scalar& scalar, const Scalar& wrt, DiffCache& diff_cache)
 			return u * dv + v * du;
 		case ExprType::Reciprocal:
 			return -du / u.powN(2);
+		case ExprType::PowF:
+			return u.powF(v)*(dv*ln(u) + v*du/u);
 		case ExprType::Sqrt:
 			return 0.5 / sqrt(u) * du;
 		case ExprType::Ln:

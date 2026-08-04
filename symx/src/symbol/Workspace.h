@@ -9,6 +9,7 @@
 #include "Scalar.h"
 #include "Vector.h"
 #include "Matrix.h"
+#include "diff.h"  // Broadcasts the include
 
 namespace symx
 {

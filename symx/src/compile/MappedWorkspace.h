@@ -148,8 +148,14 @@ namespace symx
 		
 		// Misc
 		inline const Workspace& get_workspace() const;
-		std::vector<Scalar> get_symbols(const DataMap<double>& data_map);
-		std::vector<DataMap<const FLOAT>> get_original_maps(const DataMap<double>& data_map);
+
+		/*
+		* Get symbols and maps relevant to a given DataMap. Used for CompiledInLoop to know which symbols 
+		* to evaluate and which data to bind for each element in the loop.
+		*/
+		std::vector<Scalar> get_symbols(const DataMap<double>& data_map_to_check);
+		std::vector<DataMap<const FLOAT>> get_original_maps(const DataMap<double>& data_map_to_check);
+		std::tuple<std::vector<Scalar>, std::vector<DoFIndexing>> get_symbols_and_indices(const std::vector<DataMap<double>>& data_maps_to_check);
 
 	private:
 		inline void _check_Eigen_stride_inferrable(const EigenMatrixRM<FLOAT>& arr, const std::string& operation_description) const;
@@ -797,12 +803,12 @@ namespace symx
 		}
     }
     template <typename FLOAT>
-    inline std::vector<Scalar> MappedWorkspace<FLOAT>::get_symbols(const DataMap<double> &data_map)
+    inline std::vector<Scalar> MappedWorkspace<FLOAT>::get_symbols(const DataMap<double> &data_map_to_check)
     {
         
         std::vector<Scalar> symbols;
 		for (const auto& map : this->maps) {
-			if (map.id() == data_map.id()) {  // Same container address
+			if (map.id() == data_map_to_check.id()) {  // Same container address
 				for (int i = 0; i < map.stride; ++i) {
 					symbols.push_back(this->ws.get_scalar(map.first_symbol_idx + i));
 				}
@@ -812,16 +818,42 @@ namespace symx
     }
 
     template <typename FLOAT>
-    inline std::vector<DataMap<const FLOAT>> MappedWorkspace<FLOAT>::get_original_maps(const DataMap<double> &data_map)
+    inline std::vector<DataMap<const FLOAT>> MappedWorkspace<FLOAT>::get_original_maps(const DataMap<double> &data_map_to_check)
     {
         // Find all DataMaps bound to the same data container by comparing container addresses
-        std::vector<DataMap<const FLOAT>> original_maps;
+        std::vector<DataMap<const FLOAT>> contained_maps;
 		for (const auto& map : this->maps) {
-			if (map.id() == data_map.id()) {  // Same container address
-				original_maps.push_back(map);
+			if (map.id() == data_map_to_check.id()) {  // Same container address
+				contained_maps.push_back(map);
 			}
 		}
-        return original_maps;
+        return contained_maps;
+    }
+
+    template <typename FLOAT>
+    inline std::tuple<std::vector<Scalar>, std::vector<DoFIndexing>> MappedWorkspace<FLOAT>::get_symbols_and_indices(const std::vector<DataMap<double>>& data_maps_to_check)
+    {
+        std::vector<Scalar> symbols;
+		std::vector<DoFIndexing> indices;
+
+		const int n_sets = (int)data_maps_to_check.size();
+		for (int dof_set = 0; dof_set < n_sets; dof_set++) {
+			const DataMap<double>& data_map_to_check = data_maps_to_check[dof_set];
+			for (const auto& map : this->maps) {
+				if (map.id() == data_map_to_check.id()) {  // Same container address
+					for (int i = 0; i < map.stride; ++i) {
+						symbols.push_back(this->ws.get_scalar(map.first_symbol_idx + i));
+						DoFIndexing indexing;
+						indexing.dof_set = dof_set;
+						indexing.conn_idx = map.connectivity_index;
+						indexing.stride = map.stride;
+						indexing.offset = i;
+						indices.push_back(indexing);
+					}
+				}
+			}
+		}
+        return std::make_tuple(symbols, indices);
     }
 
     template <typename FLOAT>

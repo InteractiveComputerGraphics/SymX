@@ -9,9 +9,9 @@ void symx::Assembly::start(const std::vector<int>& dof_set_offsets, int n_thread
 		this->element_hessians->start(this->n_threads);
 	}
 	if (grad) {
-		this->grad.reset(this->n_threads, this->ndofs);
+		this->grad.begin_accumulation(this->n_threads, this->ndofs);
 	}
-	this->E.reset(this->n_threads);
+	this->E.begin_accumulation(this->n_threads);
 }
 
 void symx::Assembly::stop(bool hess, bool grad)
@@ -20,7 +20,7 @@ void symx::Assembly::stop(bool hess, bool grad)
 		this->element_hessians->stop();
 	}
 	if (grad) {
-		this->grad.end();
+		this->grad.reduce();
 	}
-	this->E.end();
+	this->E.reduce();
 }

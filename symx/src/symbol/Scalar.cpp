@@ -162,10 +162,21 @@ symx::Scalar symx::Scalar::powN(const int32_t val) const
 		return Scalar(this->expressions->add_operation(ExprType::PowN, this->expr_id, val), this->expressions);
 	}
 }
+symx::Scalar symx::Scalar::powF(Scalar val) const
+{
+	return Scalar(this->expressions->add_operation(ExprType::PowF, this->expr_id, val.expr_id), this->expressions);
+}
 symx::Scalar symx::Scalar::powF(double val) const
 {
-	const int32_t constant_double_id = this->expressions->declare_constant_float(val);
-	return Scalar(this->expressions->add_operation(ExprType::PowF, this->expr_id, constant_double_id), this->expressions);
+	return this->powF(this->make_constant(val));
+}
+symx::Scalar symx::Scalar::powF(int32_t val) const
+{
+	return this->powF(this->make_constant((double)val));
+}
+symx::Scalar symx::Scalar::pow(Scalar val) const
+{
+    return this->powF(val);
 }
 symx::Scalar symx::Scalar::sqrt() const
 {
@@ -482,7 +493,15 @@ symx::Scalar symx::powN(const Scalar& scalar, int32_t val)
 }
 symx::Scalar symx::powF(const Scalar& scalar, double val)
 {
+	return scalar.powF(scalar.make_constant(val));
+}
+symx::Scalar symx::powF(const Scalar& scalar, Scalar val)
+{
 	return scalar.powF(val);
+}
+symx::Scalar symx::powF(double val, const Scalar& exp)
+{
+	return powF(exp.make_constant(val), exp);
 }
 symx::Scalar symx::sqrt(const Scalar& scalar)
 {

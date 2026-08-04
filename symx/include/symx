@@ -12,12 +12,16 @@
 
 #include "../src/solver/OutputSink.h"
 #include "../src/solver/Logger.h"
-#include "../src/solver/NewtonsMethod.h"
 #include "../src/solver/solver_utils.h"
 #include "../src/solver/fem_integrators.h"
 #include "../src/solver/mesh_generation.h"
 #include "../src/solver/mesh_ordering.h"
 
 #include "../src/solver/GlobalPotential.h"
+#include "../src/solver/FirstOrderOptimizer.h"
+#include "../src/solver/second_order/NewtonsMethod.h"
 #include "../src/solver/second_order/SecondOrderCompiledGlobal.h"
 #include "../src/solver/second_order/Assembly.h"
+
+#include "../src/solver/adjoint/AdjointNewton.h"
+#include "../src/solver/adjoint/FirstOrderOptimizerAdjoint.h"

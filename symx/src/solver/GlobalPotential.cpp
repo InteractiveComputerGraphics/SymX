@@ -166,3 +166,12 @@ int32_t symx::GlobalPotential::get_n_potentials() const
 {
     return (int32_t)this->potentials.size();
 }
+
+void GlobalPotential::add_dof(std::vector<double>& arr, const std::string& name)
+{
+    this->add_dof(
+        [&arr]() { return reinterpret_cast<std::uintptr_t>(&arr); },
+        [&arr]() { return arr.data(); }, 
+        [&arr]() { return (int32_t)(arr.size()); }, 
+        name);
+}

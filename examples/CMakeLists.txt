@@ -8,6 +8,7 @@ set(SOURCE_FILES
     rubber_extrusion.cpp
     xpbd_cloth.cpp
     dynamic_elasticity_with_contact.cpp
+    cantilever_adjoint.cpp
 	)
 
 add_executable(examples ${SOURCE_FILES})
@@ -19,4 +20,3 @@ target_compile_definitions(examples PRIVATE
     SYMX_EXAMPLES_RES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/res"
     SYMX_EXAMPLES_OUTPUT_DIR="${CMAKE_BINARY_DIR}/output"
 )
-

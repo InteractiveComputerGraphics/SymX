@@ -14,7 +14,7 @@ void symx::ElementHessians::start(int n_threads)
 	}
 	this->is_projected.clear();
 	this->hessian_updates.clear();
-	this->n_projected_count.reset(n_threads);
+	this->n_projected_count.begin_accumulation(n_threads);
 }
 
 symx::WriteHessian symx::ElementHessians::new_hessian(int thread_id, int n_blocks_per_dim)
@@ -62,7 +62,7 @@ void symx::ElementHessians::project_to_PD_inplace__all(double projection_eps, bo
 		HessianView& hessian = this->hessians[hess_i];
 		project_to_PD_inplace(hessian.values, BLOCK_SIZE * hessian.n_blocks_per_dim, projection_eps, use_mirroring);
 		this->is_projected[hess_i] = static_cast<uint8_t>(true);
-		this->n_projected_count.get(omp_get_thread_num())++;
+		this->n_projected_count.local(omp_get_thread_num())++;
 	}
 }
 
@@ -152,7 +152,7 @@ int symx::ElementHessians::_project_to_PD_for_update(double projection_eps, bool
 		// Mark as projected. It will never be visited again after this.
 		this->is_projected[hess_i] = static_cast<uint8_t>(true);
 		const int thread_id = omp_get_thread_num();
-		this->n_projected_count.get(thread_id)++;
+		this->n_projected_count.local(thread_id)++;
 
 		// Dimensions
 		const int size = BLOCK_SIZE * hessian.n_blocks_per_dim;
@@ -183,7 +183,7 @@ int symx::ElementHessians::_project_to_PD_for_update(double projection_eps, bool
 
 int symx::ElementHessians::n_projected() const
 {
-	return this->n_projected_count.get_sum();
+	return this->n_projected_count.sum_locals();
 }
 
 double symx::ElementHessians::projection_ratio() const

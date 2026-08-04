@@ -156,8 +156,8 @@ void rubber_extrusion_comparison(int refinement_level, double poissons_ratio, do
 {
     std::cout << "\n=================== rubber_extrusion_comparison() ===================" << std::endl;
 
-    rubber_extrusion(FEM_Element::Tet4, refinement_level, poissons_ratio, extrusion_factor);
+    // rubber_extrusion(FEM_Element::Tet4, refinement_level, poissons_ratio, extrusion_factor);
     rubber_extrusion(FEM_Element::Hex8, refinement_level, poissons_ratio, extrusion_factor);
-    rubber_extrusion(FEM_Element::Tet10, refinement_level/2, poissons_ratio, extrusion_factor);
-    rubber_extrusion(FEM_Element::Hex27, refinement_level/2, poissons_ratio, extrusion_factor);
+    // rubber_extrusion(FEM_Element::Tet10, refinement_level/2, poissons_ratio, extrusion_factor);
+    // rubber_extrusion(FEM_Element::Hex27, refinement_level/2, poissons_ratio, extrusion_factor);
 }

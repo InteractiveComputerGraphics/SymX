@@ -2,9 +2,9 @@
 #include <Eigen/Dense>
 #include <memory>
 
-#include "GlobalPotential.h"
-#include "second_order/SecondOrderCompiledGlobal.h"
-#include "solver_utils.h"
+#include "../GlobalPotential.h"
+#include "../solver_utils.h"
+#include "SecondOrderCompiledGlobal.h"
 #include <BlockedSparseMatrix/solve_pcg.h>
 
 namespace symx
@@ -40,11 +40,14 @@ namespace symx
 			uint64_t n_hessians = 0;
 			uint64_t n_projected_hessians = 0;
 			double projected_hessians_ratio = 0.0;
+			inline int all_ls() const { 
+				return ls_cap_iterations + ls_max_iterations + ls_inv_iterations + ls_bt_iterations; 
+			}
 		};
 
     private:
 		/* Fields */
-		std::shared_ptr<SecondOrderCompiledGlobal> compiled = nullptr;
+		spSecondOrderCompiledGlobal compiled = nullptr;
 		spGlobalPotential global_potential = nullptr;
 		spContext context = nullptr;
 		spOutputSink output = nullptr;
@@ -60,6 +63,7 @@ namespace symx
 
 		// PCG solver context (reusable buffers)
 		bsm::PCGContext pcg_context;
+		spLinearSolveContext linear_solve_context = std::make_shared<LinearSolveContext>();
 
 		// Adaptive projection state (persists across Newton iterations)
 		std::vector<uint8_t> ppn_active_dof_blocks_for_projection;  // PPN: which blocks to project
@@ -85,6 +89,11 @@ namespace symx
         SolverReturn solve();
 		const SolveStats& get_last_solve_stats() const { return this->stats; }
 		void print_summary(double total_time = -1.0) const;
+		spSecondOrderCompiledGlobal get_compiled() const { return this->compiled; }
+		spGlobalPotential get_global_potential() const { return this->global_potential; }
+		spContext get_context() const { return this->context; }
+		spOutputSink get_output() const { return this->output; }
+		spLinearSolveContext get_linear_solve_context() const { return this->linear_solve_context; }
 
     private:
 		// Returns true if all elements are projected (can't project more)

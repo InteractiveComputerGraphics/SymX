@@ -30,9 +30,9 @@ SecondOrderCompiledGlobal::SecondOrderCompiledGlobal(spGlobalPotential global_po
 
     // Parallel init
     DeferredParallelTasks tasks;
+    const double t0 = omp_get_wtime();
 
     //// Try to load / queue compilation
-    const double t0 = omp_get_wtime();
     #pragma omp parallel for num_threads(context->n_threads) schedule(dynamic)
     for (int i = 0; i < n_potentials; i++) {
         const Potential& potential = *potentials[i];
@@ -56,8 +56,8 @@ SecondOrderCompiledGlobal::SecondOrderCompiledGlobal(spGlobalPotential global_po
     context->output->print_with_new_line("Compiling... ", Verbosity::Minimal);
     std::cout << std::flush;
     tasks.run(context->n_threads);
-    context->output->print("done.", Verbosity::Minimal);
     const double t1 = omp_get_wtime();
+    context->output->print("done.", Verbosity::Minimal);
     context->output->print_with_new_line("Total time: " + std::to_string(t1 - t0) + " s", Verbosity::Minimal);
 
 	// Print ndofs
@@ -90,7 +90,7 @@ void SecondOrderCompiledGlobal::evaluate_P(double &out_P)
     this->assembly.stop(hess, grad);
 
     // Return
-    out_P = this->assembly.E.get_solution();
+	out_P = this->assembly.E.result();
 }
 
 void SecondOrderCompiledGlobal::evaluate_P__dP_du(double& out_P, Eigen::VectorXd& out_dP_du)
@@ -113,8 +113,8 @@ void SecondOrderCompiledGlobal::evaluate_P__dP_du(double& out_P, Eigen::VectorXd
     this->assembly.stop(hess, grad);
 
     // Return
-    out_P = this->assembly.E.get_solution();
-    out_dP_du = this->assembly.grad.get_solution();
+	out_P = this->assembly.E.result();
+	out_dP_du = this->assembly.grad.result();
 }
 
 spElementHessians SecondOrderCompiledGlobal::evaluate_P__dP_du__local_d2P_du2(double& out_P, Eigen::VectorXd& out_dP_du)
@@ -137,9 +137,18 @@ spElementHessians SecondOrderCompiledGlobal::evaluate_P__dP_du__local_d2P_du2(do
     this->assembly.stop(hess, grad);
 
     // Return
-    out_P = this->assembly.E.get_solution();
-    out_dP_du = this->assembly.grad.get_solution();
+	out_P = this->assembly.E.result();
+	out_dP_du = this->assembly.grad.result();
     return this->assembly.element_hessians;
+}
+
+std::vector<spCompiledCondition> symx::SecondOrderCompiledGlobal::get_conditions() const
+{
+    std::vector<spCompiledCondition> conditions;
+    for (const auto& compiled_potential : this->compiled_potentials) {
+        conditions.push_back(compiled_potential->get_condition());
+    }
+    return conditions;
 }
 
 double SecondOrderCompiledGlobal::test_derivatives_with_FD(const double h)

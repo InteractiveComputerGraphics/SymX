@@ -72,6 +72,9 @@ namespace symx
 		bool was_cached() const;
 		Info get_info() const;
 
+		// Compiler validation and diagnostics
+		// (Static methods removed, use global functions in symx namespace)
+		
 		template<typename FLOAT>
 		bool load_if_cached(const std::string& name, const std::string& folder, const std::string& cache_id);
 		template<typename FLOAT>

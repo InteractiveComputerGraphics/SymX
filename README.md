@@ -1,5 +1,3 @@
-(adjoint capabilities coming soon)
-
 # SymX
 
 <p align="center">
@@ -7,7 +5,7 @@
 </p>
 
 <p align="center">
-    <strong>Symbolic differentiation. C++ code generation. JIT compilation. Global assembly. Non-linear optimization.</strong><br>
+    <strong>Symbolic differentiation. C++ code generation. Nonlinear optimization. Differentiable simulation.</strong><br>
     <a href="https://symx.physics-simulation.org/">Docs</a> &nbsp;·&nbsp; <a href="https://animation.rwth-aachen.de/media/papers/96/2025-TOG-SymX.pdf">PDF</a> &nbsp;·&nbsp; <a href="https://doi.org/10.1145/3764928">ACM Page</a>
 </p>
 
@@ -17,6 +15,7 @@ Write complex mathematical expressions concisely, differentiate them arbitrarily
 SymX targets **non-linear optimization pipelines** typical of **FEM solvers**, but it can be used for any application that needs JIT compiled math.
 It uses a **stencil-based** perspective: expressions are defined per _element_ and evaluated over a discretization.
 SymX is the core engine of [STARK](https://github.com/InteractiveComputerGraphics/stark), a simulation framework for FEM elasticity, shells, rigid bodies, and frictional contact.
+SymX implements the adjoint method for differentiating through converged nonlinear simulations, enabling efficient inverse problems such as material, control, and shape identification.
 
 Here is an overview of the SymX pipeline for FEM elasticity simulation:
 <p align="center">
@@ -53,11 +52,13 @@ The following gallery shows some of such results:
 - **Parallel execution:** OpenMP-parallelized loops with optional graph coloring for concurrent evaluation.
 - **Incremental compilation:** Generated code is cached on disk; unchanged expressions skip differentiation and compilation.
 - **Zero-overhead abstraction:** Definition code (lambdas, dynamic loops, containers) runs only during expression building; emitted binaries are fully specialized. This allows for very expressive compositions that are concise and powerful (e.g. high-order FEM).
-- **Layered API:** Three entry points — single expression, expression + discretization loop, full second-order global solve.
+- **Layered API:** Four entry points — single expression, expression + discretization loop, global optimization, and differentiable simulation.
 - **Bring your own data:** Views into user arrays; no data format imposed on your discretization.
 - **FEM integrator:** Symbolic FEM integrator with Tet4, Hex8, Hex27 and other element types for 3D mechanics.
 - **Global assembly:** Concurrent and fast global assembly of gradients and Hessians from composable potential definitions; multiple coupled DoF sets supported.
 - **Newton's method:** Robust second-order solver with line search; customizable convergence and callbacks.
+- **First-order optimization:** Direct global potential minimization with gradient descent, Adam, VectorAdam, or L-BFGS.
+- **Adjoint method:** Native differentiation through converged nonlinear solves, with adjoint-driven first-order inverse optimization.
 - **Projection to PD:** Newton, [Projected Newton](https://dl.acm.org/doi/10.1145/1073368.1073394), [Project-on-Demand](https://arxiv.org/abs/2311.14526) and [Progressively Projected Newton](https://arxiv.org/abs/2505.21013), with clamping or [mirroring](https://dl.acm.org/doi/10.1145/3641519.3657433).
 
 
@@ -146,14 +147,17 @@ Full documentation: <https://symx.physics-simulation.org/>
 
 - [Hello World](https://symx.physics-simulation.org/hello_world.html)
 - [Setup](https://symx.physics-simulation.org/setup.html)
-- [Architecture Overview](https://symx.physics-simulation.org/diagram.html)
+- [Architecture Overview](https://symx.physics-simulation.org/architecture_overview.html)
 - [Core Symbolics](https://symx.physics-simulation.org/symbols.html)
 - [Compilation](https://symx.physics-simulation.org/compilation.html)
-- [Symbol-Data Maps](https://symx.physics-simulation.org/mapped_workspace.html)
-- [Loops](https://symx.physics-simulation.org/compiled_in_loop.html)
-- [Second-order Optimization](https://symx.physics-simulation.org/second_order_optimization.html)
+- [Symbol-Data Maps](https://symx.physics-simulation.org/symbol_data_maps.html)
+- [Loops](https://symx.physics-simulation.org/loops.html)
+- [Global Optimization](https://symx.physics-simulation.org/global_optimization.html)
 - [FEM Integration](https://symx.physics-simulation.org/fem_integration.html)
 - [Newton's Method](https://symx.physics-simulation.org/newtons_method.html)
+- [First-order Optimization](https://symx.physics-simulation.org/first_order_optimization.html)
+- [The Adjoint Method](https://symx.physics-simulation.org/adjoint_method.html)
+- [Inverse Simulation](https://symx.physics-simulation.org/inverse_simulation.html)
 - [Examples](https://symx.physics-simulation.org/examples.html)
 
 
@@ -227,4 +231,3 @@ If you are:
 - interested in extending the symbolic, compilation, or solver layers
 
 then feel free to reach out!
-

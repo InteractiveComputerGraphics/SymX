@@ -246,4 +246,3 @@ Highlights:
 
 Finally, as we move higher in the abstraction hierarchy, it is important to remark that mappings and definitions are **not** executed at evaluation time.
 The SymX snippets shown here are run **once**, usually before the solver starts, in order to define the problem and generate the actual high performance code used at evaluation.
-

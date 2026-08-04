@@ -16,6 +16,10 @@ set(SOURCE_FILES
     test_loops.cpp
     test_global_potential.cpp
     test_newton_method.cpp
+    test_solver_foundations.cpp
+    test_first_order_optimizer.cpp
+    test_adjoint.cpp
+    test_adjoint_opt.cpp
 	)
 
 # Conditionally add diagnostic tests
@@ -30,4 +34,3 @@ target_link_libraries(tests symx)
 
 # Register with CTest: run via `ctest` or `cmake --build build --target test`
 add_test(NAME symx_tests COMMAND tests)
-

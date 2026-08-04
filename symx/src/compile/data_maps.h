@@ -13,6 +13,15 @@ namespace symx
     template<typename T>
 	using EigenMatrixRM = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
+    struct DoFIndexing
+    {
+        int dof_set;   // nth set of degrees of freedom
+        int conn_idx;  // nth entry in the local element connectivity
+        int stride;    // dof set stride
+        int offset;    // dimension offset within the dof set
+
+        // Use: index = set_offsets[dof_set] + stride*element[conn_idx] + offset
+    };
 
     /*
      * ConnectivityMap

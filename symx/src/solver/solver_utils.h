@@ -1,28 +1,26 @@
 #pragma once
 
 // solver_utils.h — backward-compatible aggregation header.
-// The solver internals have been split into focused headers:
-//   SolverTypes.h     — SolverReturn, LinearSolver, ProjectionToPD enums + string helpers
-//   SolverCallbacks.h — SolverCallbacks class and spSolverCallbacks alias
-//   SolverSettings.h  — SolverSettings and NewtonSettings structs
-// Include any of those directly for finer-grained dependencies, or include
-// this file to get everything at once (existing code remains unchanged).
+// Include the focused headers directly for finer-grained dependencies.
 
-#include "solver_types.h"
+#include <memory>
+
+#include <Eigen/Dense>
+#include <Eigen/SparseCore>
+
+#include <BlockedSparseMatrix/solve_pcg.h>
+
+#include "Context.h"
 #include "SolverCallbacks.h"
+#include "second_order/ElementHessians.h"
 #include "solver_settings.h"
+#include "solver_types.h"
 
 namespace symx
 {
-    // ================================================================
-    // Miscellaneous formatting utility
-    // ================================================================
-
-    /// Format two strings in two columns separated by dots, filling to `width` total characters.
     inline std::string in_two_columns(const std::string& str1, const std::string& str2, size_t width)
     {
         std::string result = str1;
-
         if (str1.length() + str2.length() >= width) {
             result.append(".." + str2);
         }
@@ -32,8 +30,42 @@ namespace symx
                 result.append(".");
             }
         }
-
         return result + str2;
     }
-}
 
+    class LinearSolveContext
+    {
+    public:
+        LinearSolveContext();
+        ~LinearSolveContext();
+        LinearSolveContext(const LinearSolveContext&) = delete;
+        LinearSolveContext& operator=(const LinearSolveContext&) = delete;
+
+        // Discard cached symbolic-factorisation state explicitly.
+        void reset();
+        bool solve_direct_llt(
+            const ElementHessians::spBSM& hess,
+            Eigen::VectorXd& x,
+            const Eigen::VectorXd& rhs,
+            int n_threads);
+
+    private:
+        struct Impl;
+        std::unique_ptr<Impl> impl;
+    };
+    using spLinearSolveContext = std::shared_ptr<LinearSolveContext>;
+
+    bool solve_linear_system_direct_llt(
+        const ElementHessians::spBSM& hess,
+        Eigen::VectorXd& x,
+        const Eigen::VectorXd& rhs);
+
+    bsm::PCGInfo solve_linear_system_bdpcg(
+        const ElementHessians::spBSM& hess,
+        Eigen::VectorXd& x,
+        const Eigen::VectorXd& rhs,
+        const LinearSolveSettings& settings,
+        int n_threads,
+        bsm::PCGContext& pcg_context,
+        double residual_norm = 0.0);
+}

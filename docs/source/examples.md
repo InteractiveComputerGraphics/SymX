@@ -103,6 +103,17 @@ Showcases how to use the high-level `NewtonsMethod` to solve FEM problems compac
 
 ---
 
+## Inverse Cantilever
+
+![Muscle](_static/muscle.jpg)
+
+**File:** [`cantilever_adjoint.cpp`](../../examples/cantilever_adjoint.cpp)
+
+Recovers a cantilever's density from a target gravity deformation using a Newton equilibrium solve, an adjoint gradient, and outer L-BFGS optimization.
+The same file includes a muscle-control inverse problem (result above) where the inverse simulation optimizes the active muscle fibers along a deformable elastic muscle so that the tip is at a target position marked with a red cube.
+
+---
+
 ## Dynamic Elasticity with Contact
 
 ![Dynamic elasticity with contact](_static/dynamic_with_contact.jpg)
@@ -113,4 +124,3 @@ An elastic Stanford bunny is thrown in the air, hits the ground, and rolls.
 The simulation uses implicit (backward Euler) time integration, stable Neo-Hookean elasticity and IPC-style frictional contact with the floor.
 
 Each time step is solved with Newton's Method on a `GlobalPotential` that includes inertia, elasticity, contact, and friction terms — all defined symbolically through the same callback-based API.
-

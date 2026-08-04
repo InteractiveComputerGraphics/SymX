@@ -84,21 +84,30 @@ set(SOURCE_FILES
 	src/solver/Potential.cpp
 	src/solver/GlobalPotential.h
 	src/solver/GlobalPotential.cpp
-	src/solver/NewtonsMethod.h
-	src/solver/NewtonsMethod.cpp
-	src/solver/gnuplot.h
-	src/solver/gnuplot.cpp
-	src/solver/solver_types.h
-	src/solver/solver_settings.h
 	src/solver/SolverCallbacks.h
+	src/solver/solver_settings.h
+	src/solver/solver_types.h
 	src/solver/solver_utils.h
+	src/solver/solver_utils.cpp
 	src/solver/fem_integrators.h
 	src/solver/fem_integrators.cpp
 	src/solver/mesh_generation.h
 	src/solver/mesh_generation.cpp
 	src/solver/mesh_ordering.h
 	src/solver/mesh_ordering.cpp
+	src/solver/CompiledCondition.h
+	src/solver/CompiledCondition.cpp
+	src/solver/FirstOrderOptimizer.h
+	src/solver/FirstOrderOptimizer.cpp
+	src/solver/first_order/FirstOrderAlgorithm.h
+	src/solver/first_order/FirstOrderAlgorithm.cpp
+	src/solver/first_order/FirstOrderCompiledPotential.h
+	src/solver/first_order/FirstOrderCompiledPotential.cpp
+	src/solver/first_order/FirstOrderCompiledGlobal.h
+	src/solver/first_order/FirstOrderCompiledGlobal.cpp
 	
+	src/solver/second_order/NewtonsMethod.h
+	src/solver/second_order/NewtonsMethod.cpp	
 	src/solver/second_order/Assembly.cpp
 	src/solver/second_order/Assembly.h
 	src/solver/second_order/project_to_PD.cpp
@@ -110,6 +119,17 @@ set(SOURCE_FILES
 	src/solver/second_order/SecondOrderCompiledPotential.cpp
 	src/solver/second_order/SecondOrderCompiledGlobal.h
 	src/solver/second_order/SecondOrderCompiledGlobal.cpp
+	src/solver/second_order/gnuplot.h
+	src/solver/second_order/gnuplot.cpp
+	
+	src/solver/adjoint/AdjointNewton.h
+	src/solver/adjoint/AdjointNewton.cpp
+	src/solver/adjoint/AdjointCompiledLoss.h
+	src/solver/adjoint/AdjointCompiledLoss.cpp
+	src/solver/adjoint/AdjointCompiledPotential.h
+	src/solver/adjoint/AdjointCompiledPotential.cpp
+	src/solver/adjoint/FirstOrderOptimizerAdjoint.h
+	src/solver/adjoint/FirstOrderOptimizerAdjoint.cpp
 	)
 
 # Add library
@@ -167,6 +187,31 @@ message(STATUS "SymX: Codegen directory set to: ${SYMX_CODEGEN_DIR}")
 
 # Public include directory
 target_include_directories(symx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Optional Intel oneMKL/PARDISO support.  Keep the parent project's MKL
+# selection intact: SYMX_MKL_DIR is only a search hint and existing MKL cache
+# variables take precedence.
+option(SYMX_ENABLE_MKL "Use Intel oneMKL/PARDISO through Eigen" OFF)
+set(SYMX_MKL_DIR "" CACHE PATH
+    "Optional path to Intel oneMKL's CMake package directory")
+if(SYMX_ENABLE_MKL)
+    if(NOT DEFINED MKL_INTERFACE)
+        set(MKL_INTERFACE lp64 CACHE STRING "oneMKL interface width")
+    endif()
+    if(NOT DEFINED MKL_THREADING)
+        set(MKL_THREADING gnu_thread CACHE STRING "oneMKL threading layer")
+    endif()
+
+    if(SYMX_MKL_DIR STREQUAL "")
+        find_package(MKL CONFIG REQUIRED)
+    else()
+        find_package(MKL CONFIG REQUIRED HINTS "${SYMX_MKL_DIR}")
+    endif()
+
+    target_compile_definitions(symx PUBLIC SYMX_ENABLE_MKL EIGEN_USE_MKL_ALL)
+    target_link_libraries(symx PUBLIC MKL::MKL)
+    message(STATUS "SymX: MKL/PARDISO direct solver enabled")
+endif()
 
 # Dependencies
 ## libdl for shared-object loading (Linux/GCC)

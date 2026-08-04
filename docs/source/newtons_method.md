@@ -151,10 +151,21 @@ After the step is computed and it is verified that it descends the energy potent
 
 
 ### Settings
-The following are all the settings exposed as `NewtonsMethod.settings`:
+The following are all the settings exposed as `NewtonsMethod.settings`.
+`NewtonSettings` inherits from `SolverSettings` and `LinearSolveSettings`:
 
 ```cpp
-struct NewtonSettings
+struct LinearSolveSettings
+{
+    LinearSolver linear_solver = LinearSolver::BDPCG;
+    int cg_max_iterations = 10000;
+    double cg_abs_tolerance = 1e-12;
+    double cg_rel_tolerance = 1e-4;
+    bool cg_stop_on_indefiniteness = true;
+    double bailout_residual = 1e-10;
+};
+
+struct NewtonSettings : public SolverSettings, public LinearSolveSettings
 {
     // Iteration limits
     int max_iterations = 100;
@@ -186,13 +197,7 @@ struct NewtonSettings
     double ppn_tightening_factor = 0.5;
     double ppn_release_factor = 2.0;
 
-    // Linear solver
-    LinearSolver linear_solver = LinearSolver::BDPCG;
-    int cg_max_iterations = 10000;
-    double cg_abs_tolerance = 1e-12;
-    double cg_rel_tolerance = 1e-4;
-    bool cg_stop_on_indefiniteness = true;
-    double bailout_residual = 1e-10;
+    // Linear solver settings inherited from LinearSolveSettings
 };
 ```
 
@@ -206,7 +211,7 @@ Highlights:
 - `print_line_search_upon_failure = true` will evaluate energy potential profiles along the line search when Armijo backtracking fails.
     A file with the line data will be written for further processing and an interactive gnuplot session will start (if available).
 - If `project_to_pd_use_mirroring = true` negative element Hessian eigenvalues are mirrored (`abs`), instead of clamped to `projection_eps`.
-- While SymX supports `LinearSolver::DirectLLT` (Eigen), the default linear solver is Block Diagonal Preconditioned Conjugate Gradient (BDPCG). Further:
+- While SymX supports `LinearSolver::DirectLLT` (Eigen), the default linear solver is Block Diagonal Preconditioned Conjugate Gradient (BDPCG). `LinearSolveSettings` can also be used standalone (e.g. for adjoint solves). Further:
     - Convergence can be granted by absolute or relative residual, whatever happens first.
     - The solver can optionally report failure if an indefinite direction is found (needed for Progressively Projected Newton).
     - If $\| \nabla_x G \| <$ `bailout_residual`, the linear system is not executed and the Newton search is immediately declared successful. This is to avoid tiny residuals in the iterative solver which can cause issues.
@@ -232,21 +237,21 @@ class SolverCallbacks
 ```
 
 Brief descriptions:
-- `before_step`: Executed at the very start of each Newton iteration. Example: logging, resetting per-iteration state.
-- `before_energy_evaluation`: Executed before evaluating any value or derivative each iteration. Example: update contact pairs.
-- `after_step`: Executed at the end of each Newton iteration, including failed/early-exit iterations. Guaranteed to be called once for every `before_step` invocation. Example: per-iteration diagnostics, adaptive parameter updates.
-- `is_initial_state_valid`: Exits the Newton process before it starts. Example: element inversions in the rest pose.
+- `before_energy_evaluation`: Will be executed before evaluating any value or derivative. Example: it can be used to update contact pairs.
+- `before_step`: Runs immediately before every attempted Newton step.
+- `after_step`: Runs after every attempted Newton step, paired with `before_step` even when the step is rejected.
+- `is_initial_state_valid`: Exits the Newton process before it starts. Example: Element inversions in the rest pose.
 - `is_intermediate_state_valid`: Used to backtrack invalid states in the line search. Example: element inversions as a consequence of a step.
-- `on_intermediate_state_invalid`: Called when the invalid state could not be backtracked. Example: increase penalty stiffness.
-- `on_armijo_fail`: Called when Armijo backtracking fails. Example: restart the solve with a shorter time step size.
+- `on_intermediate_state_invalid`: Used if the invalid state could not be backtracked after the afforded number of iterations. Example: increase penalty stiffness.
+- `on_armijo_fail`: Analogous if Armijo's backtracking fails. Example: restart the solve with a shorter time step size.
 - `is_converged`: User's custom convergence criteria.
-- `is_converged_state_valid`: Checked right before returning success — lets the solver return non-success if the converged state is unacceptable. Example: tighten constraints before requesting a repeat solve.
-- `max_allowed_step`: Returns the maximum step length for the current iteration. Example: CCD.
+- `is_converged_state_valid`: Let Newton's Method return non-success right before return. Example: penalties are too soft, tighten them before requesting repeating the solve.
+- `max_allowed_step`: Allows the user to specify a max step for the current iteration. Example: CCD.
 
-Callbacks can be appended via the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
-`SolverCallbacks` can be accessed via `NewtonsMethod.callbacks`.
+Callbacks can be appended to those lists by using the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
+`SolverCallbacks` can be accessed in `NewtonsMethod.callbacks`.
 
-Further, a custom residual can be specified by `.set_residual(std::function<double(Eigen::VectorXd&)> f)`.
+Further, a custom residual can be specified by `.set_residual(std::function<double(const Eigen::VectorXd&)> f)`.
 
 
 
@@ -386,4 +391,3 @@ series:
   "ls_max": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
   "newton_iterations": [54]
 ```
-

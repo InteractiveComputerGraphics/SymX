@@ -22,7 +22,7 @@ namespace symx
             return _data[i]; 
         }
         View slice(int32_t begin, int32_t end) const { 
-            assert(begin < end && "symx::View slice begin must be less than end");
+            assert(begin <= end && "symx::View slice begin must be less than end");
             assert(begin >= 0 && end <= _size && "symx::View slice out of bounds"); 
             return View(_data + begin, end - begin); 
         }

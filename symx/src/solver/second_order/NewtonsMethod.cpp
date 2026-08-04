@@ -2,7 +2,6 @@
 #include "gnuplot.h"
 #include <fmt/format.h>
 #include <BlockedSparseMatrix/solve_pcg.h>
-#include <Eigen/SparseCholesky>
 #include <limits>
 #include <omp.h>
 #include <algorithm>
@@ -104,7 +103,9 @@ SolverReturn NewtonsMethod::solve()
         }
 
         // Print iteration header
-        this->output->print_with_new_line(fmt::format("{:2d}. ", newton_iteration), Verbosity::Medium);
+        this->output->print_with_new_line(
+            fmt::format("{:2d}. ", newton_iteration + this->settings.iteration_offset),
+            Verbosity::Medium);
 
         // Evaluate energy, gradient, and Hessian
         this->callbacks->run_before_energy_evaluation();
@@ -112,6 +113,8 @@ SolverReturn NewtonsMethod::solve()
 
         // Compute residual
         double residual_norm = this->callbacks->compute_residual(this->grad);
+        logger->append("energy", E0);
+        logger->append("residual_norm", residual_norm);
         this->output->print(fmt::format("r0: {:.2e} | ", residual_norm), Verbosity::Medium);
         if (newton_iteration == 0) {
             res_0 = residual_norm;
@@ -217,6 +220,7 @@ SolverReturn NewtonsMethod::solve()
 
         // Convergence: Step tolerance
         double du_max = this->du.cwiseAbs().maxCoeff();
+        logger->append("step_max_raw", du_max);
         this->output->print(fmt::format("du: {:.1e} | ", du_max), Verbosity::Medium);
         if (newton_iteration >= this->settings.min_iterations && du_max < this->settings.step_tolerance) {
             result = SolverReturn::Successful;
@@ -402,63 +406,17 @@ bool NewtonsMethod::_solve_linear_system(Eigen::VectorXd& du, const ElementHessi
     const int ndofs = (int)grad.size();
 
     if (this->settings.linear_solver == LinearSolver::DirectLLT) {
-        // Direct LU solver via Eigen
-        std::vector<Eigen::Triplet<double>> triplets;
-        hess->to_triplets(triplets);
-        
-        Eigen::SparseMatrix<double> sparse_hess(ndofs, ndofs);
-        sparse_hess.setFromTriplets(triplets.begin(), triplets.end());
-        
-        Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> solver;
-        solver.compute(sparse_hess);
-        
-        if (solver.info() != Eigen::Success) {
-            return false;
-        }
-
-        du = solver.solve(this->rhs);
-
-        if (solver.info() != Eigen::Success) {
-            return false;
-        }
-
-        
-        return solver.info() == Eigen::Success;
+        return this->linear_solve_context->solve_direct_llt(hess, du, this->rhs, this->context->n_threads);
     }
-    
-    // Block Diagonal Preconditioner Conjugate Gradient
     else if (this->settings.linear_solver == LinearSolver::BDPCG) {
-        // Forcing sequence
-        const double forcing_cg_tol = std::min(1e-2, residual_norm * std::min(0.5, std::sqrt(residual_norm)));
-        const double abs_tol = std::max(forcing_cg_tol, this->settings.cg_abs_tolerance);
-
-        // Prepare preconditioning
-        hess->set_preconditioner(bsm::Preconditioner::BlockDiagonal);
-        hess->prepare_preconditioning(this->context->n_threads);
-
-        // Initial guess
-        du.resize(ndofs);
-        du.setZero();
-
-        // PCG solver
-        bsm::PCGInfo pcg_info = bsm::solve_pcg(
-            *hess,
-            du.data(),
-            this->rhs.data(),
-            ndofs,
-            abs_tol,
-            this->settings.cg_rel_tolerance,
-            this->settings.cg_max_iterations,
-            this->context->n_threads,
-            this->settings.cg_stop_on_indefiniteness,
-            this->pcg_context
-        );
+        bsm::PCGInfo pcg_info = solve_linear_system_bdpcg(
+            hess, du, this->rhs, this->settings, this->context->n_threads, this->pcg_context, residual_norm);
 
         this->output->print(fmt::format("#CG {:5d} | ", pcg_info.n_iterations), Verbosity::Full);
         this->stats.cg_iterations += pcg_info.n_iterations;
         this->last_cg_iterations = pcg_info.n_iterations;
         return pcg_info.converged;
-    } 
+    }
     else {
         std::cout << "symx error: Unknown linear solver." << std::endl;
         exit(-1);
@@ -545,12 +503,16 @@ SolverReturn NewtonsMethod::_line_search_inplace(double E0, double du_dot_grad, 
     if (ls_inv_it == this->settings.max_backtracking_invalid_state_iterations) {
         this->output->print_with_new_line("Newton failure: Too many invalid intermediate state iterations.", Verbosity::Medium);
         this->callbacks->run_on_intermediate_state_invalid();
+        this->global_potential->set_dofs(this->dofs_before_ls.data());
         return SolverReturn::TooManyInvalidIntermediateIterations;
     }
     
     
     /* ----------------------------------- Armijo ---------------------------------- */
     if (!this->settings.enable_armijo_backtracking) {
+        logger->append("line_search_scale", retraction * step);
+        logger->append("step_max_accepted", du_max * step);
+        logger->add_and_append("ls_bt", 0);
         return SolverReturn::Running;
     }
 
@@ -642,10 +604,13 @@ SolverReturn NewtonsMethod::_line_search_inplace(double E0, double du_dot_grad, 
             exit(-1);
         }
 
+        this->global_potential->set_dofs(this->dofs_before_ls.data());
         return SolverReturn::TooManyArmijoIterations;
     }
 
     // Finish
+    logger->append("line_search_scale", retraction * step);
+    logger->append("step_max_accepted", du_max * step);
     return SolverReturn::Running;
 }
 
@@ -653,12 +618,10 @@ void NewtonsMethod::print_summary(double total_time) const
 {
 	auto* out = this->output.get();
 
-    // Exit if no iterations were performed
-    const int total_n_newton = logger->get_stats("newton_iterations").total;
-    if (total_n_newton == 0) {
-        out->print_with_new_line("No Newton iterations were performed. No summary to show.\n");
-        return;
-    }
+	if (logger->get_stats("newton_iterations").total == 0) {
+		out->print_with_new_line("No Newton iterations were performed. No summary to show.\n");
+		return;
+	}
 
 	out->print_with_new_line("");
 	out->print_with_new_line(fmt::format("  {:<24} {:>10} {:>8} {:>8} {:>8}", "Solve", "Total", "Avg", "Min", "Max"));
@@ -703,9 +666,9 @@ void NewtonsMethod::print_summary(double total_time) const
 
     // Add rest not accounted for
 	const double misc = total_time - acc;
-    if (misc / total_time >= 0.001) {
-        timer_entries.push_back({"misc", misc});
-    }
+	if (total_time > 0.0 && misc / total_time >= 0.001) {
+		timer_entries.push_back({"misc", misc});
+	}
 
     // Sort
 	std::sort(timer_entries.begin(), timer_entries.end(),

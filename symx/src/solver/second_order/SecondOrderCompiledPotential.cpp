@@ -3,10 +3,12 @@
 #include "../../symbol/diff.h"
 #include "project_to_PD.h"
 
-symx::SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential &potential, const std::vector<DataMap<double>> &dofs_maps, const std::string &compilation_directory, DeferredParallelTasks& tasks)
+using namespace symx;
+
+SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential &potential, const std::vector<DataMap<double>> &dofs_maps, const std::string &compilation_directory, DeferredParallelTasks& tasks)
     : mws(potential.get_mws())
 {
-    // Identity DoF scalars
+    // Identity DoF scalars (mws->get_symbols_and_indices() hardcoded to stride 3)
     std::vector<Scalar> dofs;
     for (int dof_set = 0; dof_set < (int)dofs_maps.size(); dof_set++) {
         const std::vector<DataMap<const double>> original_maps = this->mws->get_original_maps(dofs_maps[dof_set]);  // Get local array maps that are global DoFs
@@ -47,17 +49,20 @@ symx::SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential
     for (const Scalar& dof : dofs) {
         pre_hash += std::to_string(dof.get_symbol_idx());
     }
-    const std::string checksum = potential.get_checksum(pre_hash);
+    std::string checksum = potential.get_checksum(pre_hash);
+    if (potential.has_conditional()) {
+        checksum += potential.get_condition().get_checksum();
+    }
 
+    // Condition
+    this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks);
     
     // Try to load
     const std::string name = potential.get_name();
     this->cached = this->P.load_if_cached(this->mws, name + "_P", compilation_directory, checksum);
     this->cached &= this->P__dP_du.load_if_cached(this->mws, name + "_P__dP_du", compilation_directory, checksum);
     this->cached &= this->P__dP_du__d2P_du2.load_if_cached(this->mws, name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
-    if (potential.has_conditional()) {
-        this->cached &= this->C.load_if_cached(this->mws, name + "_C", compilation_directory, checksum);
-    }
+    this->cached &= this->condition->was_cached();
 
     // If not cached, compile
     if (!this->cached) {
@@ -78,38 +83,38 @@ symx::SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential
         tasks.add([this, v, g_vals = g.values(), h_vals = h.values(), name, compilation_directory, checksum]() {
             this->P__dP_du__d2P_du2.compile(this->mws, collect_scalars({{ v }, g_vals, h_vals}), name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
         });
-        if (potential.has_conditional()) {
-            tasks.add([this, cond = potential.get_condition(), name, compilation_directory, checksum]() {
-                this->C.compile(this->mws, { cond }, name + "_C", compilation_directory, checksum);
-            });
-        }
     }
 }
 
-bool symx::SecondOrderCompiledPotential::was_cached() const
+bool SecondOrderCompiledPotential::was_cached() const
 {
     return this->cached;
 }
 
-void symx::SecondOrderCompiledPotential::evaluate_P(Assembly &assembly)
+spCompiledCondition SecondOrderCompiledPotential::get_condition() const
+{
+    return this->condition;
+}
+
+void SecondOrderCompiledPotential::evaluate_P(Assembly &assembly)
 {
     // Evaluate element condition
-    this->_evaluate_element_condition(assembly.n_threads);
+    this->condition->evaluate(assembly.n_threads);
 
     // Evaluate potential
     this->P.run(assembly.n_threads,
         [&assembly, this](const View<double> sol, int32_t element_idx, int32_t thread_id, const View<int32_t> conn)
         {
-            assembly.E.get(thread_id) += sol[0];
+			assembly.E.local(thread_id) += sol[0];
         },
-        this->has_element_positive_condition
+        this->condition->get_element_condition()
     );
 }
 
-void symx::SecondOrderCompiledPotential::evaluate_P__dP_du(Assembly &assembly)
+void SecondOrderCompiledPotential::evaluate_P__dP_du(Assembly &assembly)
 {
     // Evaluate element condition
-    this->_evaluate_element_condition(assembly.n_threads);
+    this->condition->evaluate(assembly.n_threads);
 
     // Evaluate potential and gradient
     this->P__dP_du.run(assembly.n_threads,
@@ -119,10 +124,10 @@ void symx::SecondOrderCompiledPotential::evaluate_P__dP_du(Assembly &assembly)
             const int n_block_rows = this->n_dofs / BLOCK_SIZE;
 
             // Energy
-            assembly.E.get(thread_id) += sol[0];
+			assembly.E.local(thread_id) += sol[0];
 
             // Gradient
-			Eigen::VectorXd& grad = assembly.grad.get(thread_id);
+			Eigen::VectorXd& grad = assembly.grad.local(thread_id);
 			const View<double> grad_loc = sol.slice(1);
 
 			for (int block_i = 0; block_i < n_block_rows; block_i++) {
@@ -135,14 +140,14 @@ void symx::SecondOrderCompiledPotential::evaluate_P__dP_du(Assembly &assembly)
 				}
 			}
         },
-        this->has_element_positive_condition
+        this->condition->get_element_condition()
     );
 }
 
-void symx::SecondOrderCompiledPotential::evaluate_P__dP_du__local_d2P_du2(Assembly &assembly)
+void SecondOrderCompiledPotential::evaluate_P__dP_du__local_d2P_du2(Assembly &assembly)
 {
     // Evaluate element condition
-    this->_evaluate_element_condition(assembly.n_threads);
+    this->condition->evaluate(assembly.n_threads);
     
     // Evaluate potential, gradient, and Hessian
     this->P__dP_du__d2P_du2.run(assembly.n_threads,
@@ -152,10 +157,10 @@ void symx::SecondOrderCompiledPotential::evaluate_P__dP_du__local_d2P_du2(Assemb
             const int n_block_rows = this->n_dofs / BLOCK_SIZE;
             
             // Energy
-            assembly.E.get(thread_id) += sol[0];
+			assembly.E.local(thread_id) += sol[0];
 
             // Gradient
-            Eigen::VectorXd& grad = assembly.grad.get(thread_id);
+			Eigen::VectorXd& grad = assembly.grad.local(thread_id);
             const View<double> grad_loc = sol.slice(1, 1 + this->n_dofs);
 
             for (int block_i = 0; block_i < n_block_rows; block_i++) {
@@ -179,19 +184,6 @@ void symx::SecondOrderCompiledPotential::evaluate_P__dP_du__local_d2P_du2(Assemb
             }
             std::copy(hess_loc.data(), hess_loc.data() + hess_loc.size(), wh.values);
         },
-        this->has_element_positive_condition
+        this->condition->get_element_condition()
     );
-}
-void symx::SecondOrderCompiledPotential::_evaluate_element_condition(int32_t n_threads)
-{
-    if (this->C.is_valid()) {  // A compilation for the condition exists
-        const int n_elements = this->mws->conn.n_elements();
-        this->has_element_positive_condition.resize(n_elements);
-        this->C.run(n_threads,
-            [this](const View<double> sol, int32_t element_idx, int32_t thread_id, const View<int32_t> conn)
-            {
-                this->has_element_positive_condition[element_idx] = static_cast<uint8_t>(sol[0] > 0);
-            }
-        );
-    }
 }

@@ -45,7 +45,7 @@ namespace symx
 	private:
 		/* Definitions */
 		using UNDERLYING_FLOAT = UNDERLYING_TYPE<COMPILED_FLOAT>;
-		using spCIL = std::shared_ptr<CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>>;
+		using spCompiledInLoop = std::shared_ptr<CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>>;
 		struct BlockFetch
 		{
 			const char* array_begin = nullptr;  // Beginning of the array
@@ -103,7 +103,7 @@ namespace symx
 		~CompiledInLoop() = default;
 		CompiledInLoop(const CompiledInLoop&) = delete; // Copying makes unclear who owns the DLL
 		CompiledInLoop(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id = "");
-		static spCIL create(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id = "");
+		static spCompiledInLoop create(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id = "");
 		
 		/*
 		* This can load having a MappedWorkspace context which does not contain the output symbols.
@@ -280,7 +280,7 @@ namespace symx
     }
 
     template<typename INPUT_FLOAT, typename COMPILED_FLOAT = INPUT_FLOAT, typename OUTPUT_FLOAT = INPUT_FLOAT>
-	using spCIL = std::shared_ptr<CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>>;
+	using spCompiledInLoop = std::shared_ptr<CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>>;
 }
 
 #include "CompiledInLoop_run.h"

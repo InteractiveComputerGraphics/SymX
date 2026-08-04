@@ -1,6 +1,10 @@
-# Second-Order Optimization
+# Global Optimization
 SymX was designed to find the solution to large and complex non-linear optimization problems.
 While it is not the only thing it can do, it is the main focus and where most of the advanced infrastructure lies.
+
+This layer starts from a `GlobalPotential`: a global objective assembled from symbolic element energies.
+Use [Newton's method](newtons_method.md) when its Hessian is useful, or [first-order optimization](first_order_optimization.md) when a gradient method is the better fit.
+The next layer, [differentiable simulation](adjoint_method.md), uses a converged Newton solve as the state of an inverse problem.
 
 Consider the problem
 
@@ -78,7 +82,7 @@ G->add_potential("new_potential", connectivity,
     }
 );
 ```
-Potential function definitions use `MappedWorkspace` and `Element`, introduced in [Symbol-Data Maps](symbol_data.md), within a lambda.
+Potential function definitions use `MappedWorkspace` and `Element`, introduced in [Symbol-Data Maps](symbol_data_overview.md), within a lambda.
 This time however, these are managed by `GlobalPotential` in order to automate differentiation and evaluation later on.
 Multiple potentials can be added freely, and together they form $G = \sum_p P_p$.
 

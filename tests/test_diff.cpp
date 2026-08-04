@@ -52,6 +52,10 @@ TEST_CASE("Derivatives", "[derivatives]")
 		REQUIRE(approx(diff(asin(a), a).eval(), 1.0 / std::sqrt(1.0 - A * A)));
 		REQUIRE(approx(diff(acos(a), a).eval(), -1.0 / std::sqrt(1.0 - A * A)));
 		REQUIRE(approx(diff(atan(a), a).eval(), 1.0 / (1.0 + A * A)));
+		REQUIRE(approx(diff(powF(a, b), a).eval(), B * std::pow(A, B - 1.0)));
+		REQUIRE(approx(diff(powF(a, b), b).eval(), std::pow(A, B) * std::log(A)));
+		REQUIRE(approx(diff(powF(a, 2.5), a).eval(), 2.5 * std::pow(A, 1.5)));
+		REQUIRE(approx(diff(powF(2.5, a), a).eval(), std::pow(2.5, A) * std::log(2.5)));
     }
 
     SECTION("Double Expressions")
@@ -69,6 +73,24 @@ TEST_CASE("Derivatives", "[derivatives]")
 		REQUIRE(approx(diff(sin(a * b), a).eval(), std::cos(A * B) * B));
 		REQUIRE(approx(diff(cos(a * b), a).eval(), -std::sin(A * B) * B));
 		REQUIRE(approx(diff(tan(a * b), a).eval(), (1.0 + std::tan(A * B) * std::tan(A * B)) * B));
+    }
+
+    SECTION("powF compound expressions")
+    {
+		// d/da[ (a*b)^c ] = c * (a*b)^(c-1) * b
+		REQUIRE(approx(diff(powF(a * b, c), a).eval(), C * std::pow(A * B, C - 1.0) * B));
+		// d/dc[ (a*b)^c ] = (a*b)^c * ln(a*b)
+		REQUIRE(approx(diff(powF(a * b, c), c).eval(), std::pow(A * B, C) * std::log(A * B)));
+		// d/da[ a^(b+c) ] = (b+c) * a^(b+c-1)
+		REQUIRE(approx(diff(powF(a, b + c), a).eval(), (B + C) * std::pow(A, B + C - 1.0)));
+		// d/db[ a^(b+c) ] = a^(b+c) * ln(a)
+		REQUIRE(approx(diff(powF(a, b + c), b).eval(), std::pow(A, B + C) * std::log(A)));
+		// Second derivative: d²/da²[ a^c ] = c*(c-1)*a^(c-2)
+		REQUIRE(approx(diff(diff(powF(a, c), a), a).eval(), C * (C - 1.0) * std::pow(A, C - 2.0)));
+		// Cross derivative: d²/da db[ a^b ] = a^b * (ln(a)/a * b + ln(a)/a) (product rule via chain)
+		// = a^b * (b*ln(a)/a + ln(a)/a) ... actually d/da[a^b*ln(a)] = a^b*(1/a)*ln(a) + a^b*(b/a)*1 ... 
+		// simpler: d/db[ d/da[a^b] ] = d/db[ b * a^(b-1) ] = a^(b-1) + b * a^(b-1) * ln(a)
+		REQUIRE(approx(diff(diff(powF(a, b), a), b).eval(), std::pow(A, B - 1.0) + B * std::pow(A, B - 1.0) * std::log(A)));
     }
 
     SECTION("Point-triangle distance")

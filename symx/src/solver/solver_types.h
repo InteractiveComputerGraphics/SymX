@@ -1,8 +1,9 @@
 #pragma once
-#include <string>
-#include <sstream>
+
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 namespace symx
 {
@@ -20,7 +21,23 @@ namespace symx
         TooManyInvalidIntermediateIterations,
         StepDoesNotDescend,
         InvalidConvergedState,
+        InvalidEvaluation,
     };
+    static std::string to_string(SolverReturn r)
+    {
+        switch (r) {
+            case SolverReturn::Successful:                           return "Successful";
+            case SolverReturn::TooManyIterations:                    return "TooManyIterations";
+            case SolverReturn::LinearSystemSolveFailure:             return "LinearSystemSolveFailure";
+            case SolverReturn::StepDoesNotDescend:                   return "StepDoesNotDescend";
+            case SolverReturn::InvalidInitialState:                  return "InvalidInitialState";
+            case SolverReturn::TooManyArmijoIterations:              return "TooManyArmijoIterations";
+            case SolverReturn::TooManyInvalidIntermediateIterations: return "TooManyInvalidIntermediateIterations";
+            case SolverReturn::InvalidConvergedState:                return "InvalidConvergedState";
+            case SolverReturn::InvalidEvaluation:                    return "InvalidEvaluation";
+            default:                                                  return "Unknown";
+        }
+    }
 
     // ================================================================
     // Linear solver selection

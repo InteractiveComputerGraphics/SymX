@@ -13,7 +13,12 @@ namespace symx
 
 	template<typename T>
 	T fem_interpolation(const FEM_Element& element, std::vector<T>& vh, const Vector& xi);
+
+	// From nodal values and integration point
 	Matrix fem_jacobian(const FEM_Element& element, std::vector<Vector>& xh, const Vector& xi);
+
+	// From FEM interpolated point, and integration point
+	Matrix fem_jacobian(const FEM_Element& element, const Vector& x, const Vector& xi);
 	std::vector<std::array<double, 4>> get_integration_rule(const FEM_Element& element); // Returns {xi0, xi1, xi2, weight} quadrature points for the element type
 
 	// Registers a Summation in the MappedWorkspace so that the compiled kernel is called

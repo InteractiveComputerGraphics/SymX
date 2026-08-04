@@ -214,7 +214,7 @@ void NeoHookean_eval_microbenchmark(int n_threads)
     const int thread_id = 0; // Each thread uses its own buffer. No need to specify for single-threaded, done here for illustration.
     c_hess.set_n_threads(n_threads); // No need in the case of single-threaded, done here for illustration
     bsm::ParallelNumber<double> dummy;
-    dummy.reset(n_threads);
+    dummy.begin_accumulation(n_threads);
     
     // Set values
     auto set = [](const FLOAT& v)
@@ -254,11 +254,11 @@ void NeoHookean_eval_microbenchmark(int n_threads)
         
         // Prevent optimizing away
         FLOAT* result_f = reinterpret_cast<FLOAT*>(&result[0]);
-        dummy.get(tid) += (double)result_f[0];
+        dummy.local(tid) += (double)result_f[0];
     }
     double t1 = omp_get_wtime();
     int per_run = get_n_items_in_simd<COMPILATION_FLOAT>();
-    std::cout << fmt::format("[{:2d} threads] runtime: {:6f} microseconds | checksum: {:6e}", n_threads, 1e6 * (t1 - t0)/(n_runs*per_run), dummy.end()) << std::endl;
+    std::cout << fmt::format("[{:2d} threads] runtime: {:6f} microseconds | checksum: {:6e}", n_threads, 1e6 * (t1 - t0)/(n_runs*per_run), dummy.reduce()) << std::endl;
 }
 void NeoHookean_eval_comparison()
 {
@@ -352,8 +352,8 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
     // Prepare evaluation
     bsm::ParallelNumber<double> energy;
     bsm::ParallelVector<Eigen::VectorXd> grad;
-    energy.reset(n_threads);
-    grad.reset(n_threads, ndofs);
+    energy.begin_accumulation(n_threads);
+    grad.begin_accumulation(n_threads, ndofs);
 
     // Eigen evaluation
     if constexpr (USE_EIGEN) {
@@ -373,11 +373,11 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
             int32_t thread_id, View<int32_t> elem_conn)
             {
                 // Energy value
-                energy.get(thread_id) += out[0];
+                energy.local(thread_id) += out[0];
 
                 // Gradient
                 View<double> out_grad = out.slice(1); // Drop the first value
-                Eigen::VectorXd& thread_grad = grad.get(thread_id);
+                Eigen::VectorXd& thread_grad = grad.local(thread_id);
                 for (int v = 0; v < 4; v++) {
                     for (int d = 0; d < 3; d++) {
                         thread_grad[3*elem_conn[v] + d] += out_grad[3*v + d];
@@ -408,14 +408,14 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
             }
         );
         double t1 = omp_get_wtime();
-        const double global_energy = energy.end();
+        const double global_energy = energy.reduce();
         std::cout << fmt::format("Eigen - {}: [{:2d}][{:6}]({:.2e} dofs, {:.2e} tets) Eval time: {:6.2f} ms | Check: {:10.4f}", 
             (PROJECT_TO_PD) ? "SPD" : "Unp",
             n_threads, get_float_type_as_string<COMPILATION_FLOAT>(), (double)ndofs, (double)ntets, 1000.0*(t1 - t0), global_energy);
 
         // Reduce parallel structures
         t0 = omp_get_wtime();
-        const Eigen::VectorXd& global_gradient = grad.end();
+        const Eigen::VectorXd& global_gradient = grad.reduce();
 
         std::vector<int> triplet_offsets;
         triplet_offsets.push_back(0);
@@ -450,8 +450,8 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
         std::array<double, 2> times;
         for (int i = 0; i < 2; i++) {
             hess.start_insertion(ndofs, ndofs);
-            energy.reset(n_threads);
-            grad.reset(n_threads, ndofs);
+            energy.begin_accumulation(n_threads);
+            grad.begin_accumulation(n_threads, ndofs);
 
             // Evaluate
             double t0 = omp_get_wtime();
@@ -460,11 +460,11 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
                 int32_t thread_id, View<int32_t> elem_conn)
                 {
                     // Energy value
-                    energy.get(thread_id) += out[0];
+                    energy.local(thread_id) += out[0];
 
                     // Gradient
                     View<double> out_grad = out.slice(1); // Drop the first value
-                    Eigen::VectorXd& thread_grad = grad.get(thread_id);
+                    Eigen::VectorXd& thread_grad = grad.local(thread_id);
                     for (int v = 0; v < 4; v++) {
                         for (int d = 0; d < 3; d++) {
                             thread_grad[3*elem_conn[v] + d] += out_grad[3*v + d];
@@ -496,7 +496,7 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads)
             times[i] = 1000.0*(t1 - t0);
         }
         
-        const double global_energy = energy.end();
+        const double global_energy = energy.reduce();
         std::cout << fmt::format("SymX - {}: [{:2d}][{:6}]({:.2e} dofs, {:.2e} tets) Eval time 0: {:6.2f} ms | Eval time 1: {:6.2f} ms | Check: {:10.4f}", 
             (PROJECT_TO_PD) ? "SPD" : "Unp",
             n_threads, get_float_type_as_string<COMPILATION_FLOAT>(), (double)ndofs, (double)ntets, times[0], times[1], global_energy);

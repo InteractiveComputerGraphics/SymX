@@ -56,6 +56,7 @@ namespace symx
         void add_dof(EigenMatrixRM<double>& arr, const std::string& name = "");
         template<typename STATIC_VECTOR>
         void add_dof(std::vector<STATIC_VECTOR>& arr, const std::string& name = "");
+        void add_dof(std::vector<double>& arr, const std::string& name = "");
         template<typename DYNAMIC_VECTOR>
         void add_dof(DYNAMIC_VECTOR& arr, const std::string& name = "");
         void add_dof(double& scalar, const std::string& name = "" );

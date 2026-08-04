@@ -50,7 +50,10 @@ namespace symx
 		void operator*=(const Scalar& other);
 		void operator/=(const Scalar& other);
 		Scalar powN(int32_t val) const;
+		Scalar powF(Scalar val) const;			
 		Scalar powF(double val) const;
+		Scalar powF(int32_t val) const;		
+		Scalar pow(Scalar val) const;
 		Scalar inv() const;
 		Scalar sqrt() const;
 		Scalar log() const;  // Keep for backward compatibility (natural log)
@@ -102,7 +105,9 @@ namespace symx
 	Scalar operator/(double val, Scalar scalar);
 	Scalar operator-(const Scalar& scalar);
 	Scalar powN(const Scalar& scalar, int32_t val);
+	Scalar powF(const Scalar& scalar, Scalar val);
 	Scalar powF(const Scalar& scalar, double val);
+	Scalar powF(double val, const Scalar& exp);
 	Scalar sqrt(const Scalar& scalar);
 	Scalar log(const Scalar& scalar);  // Keep for backward compatibility (natural log)
 	Scalar ln(const Scalar& scalar);   // Natural logarithm (explicit)

@@ -185,4 +185,3 @@ Matrix hess = gradient(grad, dofs, /* is_symmetric = */ true, diff_cache);
 Using the right level of abstraction (which will be shown later), SymX can autonomously compute derivatives, evaluate expressions, assemble sparse systems and use efficient linear solvers.
 This example is meant to illustrate the symbolic work in a non-trivial scenario.
 
-

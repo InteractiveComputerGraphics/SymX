@@ -1,6 +1,8 @@
 #pragma once
-#include <functional>
+
 #include <algorithm>
+#include <functional>
+#include <memory>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -20,7 +22,6 @@ namespace symx
     class SolverCallbacks
     {
     private:
-        /* Fields */
         std::vector<std::function<void()>>     before_energy_evaluation;
         std::vector<std::function<void()>>     before_step;
         std::vector<std::function<void()>>     after_step;
@@ -34,7 +35,6 @@ namespace symx
         std::function<double(const Eigen::VectorXd&)> residual = default_residual;
         spContext context = nullptr;
 
-        /* Internal helpers */
         void _run(const std::vector<std::function<void()>>& fs)
         {
             for (auto& f : fs) {
@@ -51,23 +51,13 @@ namespace symx
         }
 
     public:
-        /* Construction */
         SolverCallbacks(spContext context) : context(context) {}
         static std::shared_ptr<SolverCallbacks> create(spContext context) { return std::make_shared<SolverCallbacks>(context); }
 
-        // ---- Register callbacks ----
-
         void set_residual(std::function<double(const Eigen::VectorXd&)> f) { this->residual = f; }
-
-        /// Called once per Newton iteration, before energy/gradient/Hessian evaluation.
         void add_before_energy_evaluation(std::function<void()> f) { this->before_energy_evaluation.push_back(f); }
-
-        /// Called at the very start of each Newton iteration (iteration index is 0-based).
         void add_before_step(std::function<void()> f) { this->before_step.push_back(f); }
-
-        /// Called at the end of each Newton iteration (including failed/early-exit iterations).
         void add_after_step(std::function<void()> f) { this->after_step.push_back(f); }
-
         void add_is_initial_state_valid(std::function<bool()> f) { this->is_initial_state_valid.push_back(f); }
         void add_is_intermediate_state_valid(std::function<bool()> f) { this->is_intermediate_state_valid.push_back(f); }
         void add_on_intermediate_state_invalid(std::function<void()> f) { this->on_intermediate_state_invalid.push_back(f); }
@@ -75,8 +65,6 @@ namespace symx
         void add_is_converged(std::function<bool()> f) { this->is_converged.push_back(f); }
         void add_is_converged_state_valid(std::function<bool()> f) { this->is_converged_state_valid.push_back(f); }
         void add_max_allowed_step(std::function<double()> f) { this->max_allowed_step.push_back(f); }
-
-        // ---- Invoke callbacks (called by the solver) ----
 
         void run_before_energy_evaluation()
         {
@@ -136,8 +124,6 @@ namespace symx
             }
             return max_step;
         }
-
-        // ---- Residual computation ----
         double compute_residual(const Eigen::VectorXd& r) { return this->residual(r); }
     };
 
