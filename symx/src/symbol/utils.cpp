@@ -24,12 +24,12 @@ std::vector<Scalar> symx::collect_scalars(const std::vector<std::vector<Scalar>>
 	return scalars;
 }
 
-std::vector<Scalar> symx::collect_scalars(const std::vector<Scalar> &lst1, const std::vector<Scalar> &lst2)
+std::vector<Scalar> symx::collect_scalars(const std::vector<Scalar>& first, const std::vector<Scalar>& second)
 {
     std::vector<Scalar> scalars;
-    scalars.reserve(lst1.size() + lst2.size());
-    scalars.insert(scalars.end(), lst1.begin(), lst1.end());
-    scalars.insert(scalars.end(), lst2.begin(), lst2.end());
+    scalars.reserve(first.size() + second.size());
+    scalars.insert(scalars.end(), first.begin(), first.end());
+    scalars.insert(scalars.end(), second.begin(), second.end());
     return scalars;
 }
 

@@ -618,10 +618,12 @@ void NewtonsMethod::print_summary(double total_time) const
 {
 	auto* out = this->output.get();
 
-	if (logger->get_stats("newton_iterations").total == 0) {
-		out->print_with_new_line("No Newton iterations were performed. No summary to show.\n");
-		return;
-	}
+    // Exit if no iterations were performed
+    const int total_n_newton = logger->get_stats("newton_iterations").total;
+    if (total_n_newton == 0) {
+        out->print_with_new_line("No Newton iterations were performed. No summary to show.\n");
+        return;
+    }
 
 	out->print_with_new_line("");
 	out->print_with_new_line(fmt::format("  {:<24} {:>10} {:>8} {:>8} {:>8}", "Solve", "Total", "Avg", "Min", "Max"));
@@ -666,9 +668,9 @@ void NewtonsMethod::print_summary(double total_time) const
 
     // Add rest not accounted for
 	const double misc = total_time - acc;
-	if (total_time > 0.0 && misc / total_time >= 0.001) {
-		timer_entries.push_back({"misc", misc});
-	}
+    if (misc / total_time >= 0.001) {
+        timer_entries.push_back({"misc", misc});
+    }
 
     // Sort
 	std::sort(timer_entries.begin(), timer_entries.end(),
