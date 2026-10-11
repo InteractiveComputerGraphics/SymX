@@ -31,6 +31,6 @@ void dynamic_elasticity_with_contact();
 
 // cantilever_adjoint.cpp
 void cantilever_density_id(symx::FEM_Element fem_element_type = symx::FEM_Element::Hex8);
-void cantilever_muscle_control(symx::FEM_Element fem_element_type = symx::FEM_Element::Hex8);
-void cantilever_density_id_comparison();
-void cantilever_muscle_control_comparison();
+void cantilever_muscle_control(
+    symx::FEM_Element fem_element_type = symx::FEM_Element::Hex8,
+    bool run_sequence = false);
