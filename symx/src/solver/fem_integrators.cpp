@@ -38,6 +38,24 @@ int symx::get_stride(const FEM_Element& element)
 		exit(-1);
 	}
 }
+Matrix symx::fem_shape_gradients(const FEM_Element& element, const Vector& xi)
+{
+    const std::vector<Scalar> N = fem_shape_functions(element, xi);
+    std::vector<Scalar> values;
+    values.reserve(N.size() * 3);
+    DiffCache cache;
+    for (const Scalar& Ni : N) {
+        for (int a = 0; a < 3; ++a) {
+            values.push_back(diff(Ni, xi[a], cache));
+        }
+    }
+    return Matrix(values, {static_cast<int32_t>(N.size()), 3});
+}
+
+Matrix symx::fem_deformation_gradient_B(const FEM_Element& element, const Vector& xi, const Matrix& JX)
+{
+	return fem_shape_gradients(element, xi) * JX.inv();
+}
 Matrix symx::fem_jacobian(const FEM_Element& element, std::vector<Vector>& xh, const Vector& xi)
 {
 	Vector x = fem_interpolation(element, xh, xi);

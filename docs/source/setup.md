@@ -32,6 +32,9 @@ cmake --build build --parallel --target tests      # Only tests
 cmake --build build --parallel                     # All
 ```
 
+Build parallelism uses the native build tool's default. To limit it, pass
+`--parallel N`, or omit `--parallel` and set `CMAKE_BUILD_PARALLEL_LEVEL`.
+
 Run
 ```bash
 build/tests/tests         # Tests
@@ -46,9 +49,14 @@ build/examples/examples   # Examples
 | `SYMX_COMPILER_PATH` | `AUTO` | Compiler used for JIT code generation at runtime |
 | `SYMX_CODEGEN_DIR` | *(empty)* | Output directory for generated files; defaults to `<build>/codegen` |
 | `SYMX_HESS_STORAGE_FLOAT` | `double` | Hessian storage precision (`float` or `double`) |
-| `SYMX_ENABLE_MKL` | `OFF` | Use oneMKL/PARDISO for direct sparse LLT solves |
-| `SYMX_MKL_DIR` | *(empty)* | Optional directory containing `MKLConfig.cmake` |
+| `SYMX_ENABLE_MKL` | `AUTO` | Use oneMKL/PARDISO for direct sparse LLT solves when available (`AUTO` / `ON` / `OFF`) |
+| `SYMX_MKL_DIR` | *(empty)* | Optional directory containing `MKLConfig.cmake` (compatibility hint; `MKL_DIR` is also supported) |
+| `SYMX_USE_SYSTEM_FMT` | `OFF` | Search for an installed fmt; otherwise use the bundled copy. An existing `fmt::fmt` target always takes precedence |
 | `SYMX_STACK_SIZE` | `10480000` | Linker stack reservation for generated expressions |
+
+SymX defaults to bundled fmt to avoid accidentally linking a shared library
+from an unrelated environment such as Conda. Use `-DSYMX_USE_SYSTEM_FMT=ON`
+to allow installed fmt packages, or supply a `fmt::fmt` target from a parent project.
 
 
 ### AVX2 support
@@ -69,11 +77,39 @@ Importantly, all _operations_ are still performed in `double` (via casting).
 This option simply quantizes the global matrix values to `float`, halving memory traffic and significantly increasing performance.
 The default remains `double` as very numerically stiff problems might require it, but the user is encouraged to assess whether `float` works for their application.
 
-### MKL and stack size
-Set `-DSYMX_ENABLE_MKL=ON` to use Eigen's PARDISO path through oneMKL. If
-CMake cannot discover oneMKL itself, set `-DSYMX_MKL_DIR` to the directory
-containing `MKLConfig.cmake`. MKL remains optional and off by default.
+### MKL
+With the default `SYMX_ENABLE_MKL=AUTO`, SymX uses Eigen's PARDISO path when
+oneMKL is available and otherwise uses Eigen's built-in solvers. CMake
+searches its normal package paths, an existing `MKL::MKL` target supplied by a
+parent project, `SYMX_MKL_DIR`, `MKLROOT` and `ONEAPI_ROOT`, and common oneAPI
+installation directories (including versioned installations). SymX does not
+ship with a copy of MKL and will not download it.
 
+For a standard Intel oneAPI installation on Linux, no environment setup is
+needed before configuring:
+
+```bash
+cmake -S . -B build
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+```
+
+Use `-DSYMX_ENABLE_MKL=ON` to require MKL and fail configuration if it cannot
+be found, or `-DSYMX_ENABLE_MKL=OFF` to use Eigen's solver even when MKL is
+installed. For a nonstandard installation, pass a CMake package path or
+installation root:
+
+```bash
+cmake -S . -B build -DMKL_DIR=/path/to/mkl/lib/cmake/mkl
+# Or:
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/mkl
+```
+
+An existing build directory keeps its cached `SYMX_ENABLE_MKL` value. Pass
+`-DSYMX_ENABLE_MKL=AUTO` to enable automatic discovery in a build previously
+configured with MKL disabled.
+
+### Stack size
 `SYMX_STACK_SIZE` controls the linker stack reservation. Increase it only for
 exceptionally large generated expressions that exhaust the platform default.
 

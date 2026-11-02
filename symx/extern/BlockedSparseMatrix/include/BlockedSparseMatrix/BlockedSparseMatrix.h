@@ -226,6 +226,14 @@ namespace bsm
 		template<typename Triplet>
 		void to_triplets(std::vector<Triplet>& triplets);
 
+		// Read-only storage access. Finalize insertion before reading the CRS;
+		// references and pointers must be reacquired after modifying the matrix.
+		int get_n_rows() const { return this->n_rows; }
+		int get_n_cols() const { return this->n_cols; }
+		const std::vector<uint64_t>& get_block_row_offsets() const { return this->crs_current->rows; }
+		const std::vector<int>& get_block_column_indices() const { return this->crs_current->cols; }
+		const STORAGE_FLOAT* get_block_values() const { return this->crs_current->vals.data(); }
+
 		/**
 		 * @brief Slices the current matrix with only the (block) rows
 		 *        and (block) columns for which section_blocks[i] is non-zero.

@@ -64,7 +64,8 @@ class SymXCppLexer(CppLexer):
                     "GlobalPotential", "Verbosity", "NewtonsMethod", "ProjectionToPD",
                     "SolverReturn", "LabelledConnectivity", "numeric_limits", "LinearSolver",
                     "Workspace", "Compiled", "DiffCache", "Compilation", "BlockedSparseMatrix", "bsm",
-                    "Ordering", "RowMajor", "Tet4", "Hex8", "Tet10", "Hex27", "Element", "VectorXd", "symx"
+                    "Ordering", "RowMajor", "Tet4", "Hex8", "Tet10", "Hex27", "Element", "VectorXd", "symx",
+                    "FemEnergySplit"
                 ],
                 funcs=[
                     "PLACEHOLDER",

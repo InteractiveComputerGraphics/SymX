@@ -14,11 +14,11 @@ symx::AdjointCompiledLoss::AdjointCompiledLoss(const Potential &loss, const std:
 
     // Checksum
     std::string pre_hash = get_checksum(all_symbols);
+    if (loss.is_factorized()) { pre_hash += "_fem_loss"; }
     std::string checksum = loss.get_checksum(pre_hash);
     if (loss.has_conditional()) {
         checksum += loss.get_condition().get_checksum();
     }
-
     // Condition
     this->condition = std::make_shared<CompiledCondition>(loss, checksum, compilation_directory, tasks);
 

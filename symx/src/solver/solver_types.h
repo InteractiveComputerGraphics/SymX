@@ -4,9 +4,19 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+
+#include <Eigen/Core>
 
 namespace symx
 {
+    // Per-potential results; each gradient uses the full global DoF ordering.
+    struct PotentialComponents
+    {
+        std::unordered_map<std::string, double> energies;
+        std::unordered_map<std::string, Eigen::VectorXd> gradients;
+    };
+
     // ================================================================
     // Solver result
     // ================================================================

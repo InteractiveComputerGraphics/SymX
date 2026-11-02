@@ -36,6 +36,19 @@ Scalar Potential::get_condition() const
     return *(this->cond);
 }
 
+void Potential::set_factorization(std::unique_ptr<FactorizationData> data)
+{
+    this->factorization = std::move(data);
+}
+bool Potential::is_factorized() const
+{
+    return this->factorization != nullptr;
+}
+const FactorizationData& Potential::get_factorization() const
+{
+    return *this->factorization;
+}
+
 std::vector<Scalar> Potential::get_symbols(const DataMap<double>& data_map) const
 {
     return this->mws->get_symbols(data_map);

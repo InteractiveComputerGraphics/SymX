@@ -1,5 +1,7 @@
 #pragma once
 #include "CompiledInLoop.h"
+#include <cmath>
+#include <cstring>
 
 /*
 ================================================================================
@@ -90,6 +92,10 @@ namespace symx
 		// ==========================================  PREPARATION  ========================================
 		// =================================================================================================
 
+		// Validate types and iteration data even if the connectivity is empty.
+		this->_check_types(this->mws);
+		this->mws->verify_iteration_maps();
+
 		// Exit if there are no elements in the connectivity
 		if (this->mws->conn.n_elements() == 0) {
 			return;
@@ -119,6 +125,8 @@ namespace symx
 		const int32_t padded_n_inputs = detail::round_up(n_inputs, PADDING);
 		const int32_t padded_n_outputs = detail::round_up(n_outputs, PADDING);
 		const bool has_summation = this->mws->has_summation();
+		const int64_t* offsets = this->mws->summation.is_dynamic() ? this->mws->summation.offsets() : nullptr;
+
 		const int32_t* connectivity_data = this->mws->conn.data();
 		const int32_t n_elements = this->mws->conn.n_elements();
 		const int32_t connectivity_stride = this->mws->conn.stride;
@@ -189,6 +197,13 @@ namespace symx
 			this->block_fetches.push_back(block);
         }
 
+		// Iteration/summation data
+		std::vector<const INPUT_FLOAT*> iteration_data;
+		iteration_data.reserve(this->mws->iter_maps.size());
+		for (const auto& map : this->mws->iter_maps) {
+			iteration_data.push_back(map.data());
+		}
+
 		// No coloring - all elements in one color bin
 		if (!this->use_coloring) {
 			this->color_bins.resize(1);
@@ -242,6 +257,9 @@ namespace symx
 				char* buf_input_soa  = get_buf(thread_id, BUF_INPUT_SOA);
 				char* buf_output_soa = get_buf(thread_id, BUF_OUTPUT_SOA);
 				char* buf_output_aos = get_buf(thread_id, BUF_OUTPUT_AOS);
+				// Unmapped summation symbols and padded lanes must be initialized before
+				// casting, shuffling, or check-mode inspection of the input buffer.
+				if (has_summation) { std::memset(buf_input_aos, 0, input_size * sizeof(INPUT_FLOAT)); }
 
 				// Gather elements
 				std::array<uint8_t, LINES> is_pad_element;
@@ -359,60 +377,75 @@ namespace symx
 					}
 				}
 				else {
-					// Summation: accumulate multiple iterations
+					// 1. Prepare summation buffers. Each group reuses the same scratch;
+					// accum holds separate results for all elements in the gathered batch.
 					// Scratch buffer for each iteration's output:
 					//   SIMD:   buf_output_aos (reused, will be overwritten during unshuffle)
 					//   Scalar: buf_input_soa (unused in scalar path)
 					UNDERLYING_FLOAT* scratch = is_simd ? reinterpret_cast<UNDERLYING_FLOAT*>(buf_output_aos)
 					                                    : reinterpret_cast<UNDERLYING_FLOAT*>(buf_input_soa);
 					UNDERLYING_FLOAT* accum   = comp_output;  // Accumulator
+					// Kernels write only n_outputs; keep the padded tail zero so the
+					// accumulation loop can use the aligned, vectorizable output stride.
+					std::fill_n(scratch, padded_n_outputs * N_SIMD, static_cast<UNDERLYING_FLOAT>(0.0));
 
-					// Zero accumulator
+					// Empty ranges retain these zeros and never evaluate the point kernel.
 					for (int i = 0; i < padded_n_outputs * LINES; i++) {
 						accum[i] = static_cast<UNDERLYING_FLOAT>(0.0);
 					}
 
 					const Summation<INPUT_FLOAT>& summation = this->mws->summation;
-					for (int sum_it = 0; sum_it < summation.n_iterations; sum_it++) {
-						// Update summation data in the SoA input buffer
-						const int32_t begin = summation.first_symbol_idx;
-						if (N_SIMD == 1) {
-							for (int32_t line_i = 0; line_i < LINES; line_i++) {
-								if (is_pad_element[line_i]) { break; }
-								UNDERLYING_FLOAT* line_input = comp_input + line_i * padded_n_inputs;
-								for (int i = 0; i < summation.stride; i++) {
-									line_input[begin + i] = static_cast<UNDERLYING_FLOAT>(summation.data[sum_it * summation.stride + i]);
+					// 2. Finish one element group before moving to the next group.
+					// Dynamic summations are scalar (N_SIMD == 1); fixed summations can
+					// process N_SIMD elements together. Both use the same point loop below.
+					for (int run_i = 0; run_i < LINES / N_SIMD; run_i++) {
+						const int first_line = run_i * N_SIMD;
+						if (is_pad_element[first_line]) { break; }
+						// Resolve the local count and each lane's start in flat point data:
+						// fixed: e * count; dynamic: offsets[e]. Use original row IDs even
+						// when filtering or coloring changes the element processing order.
+						const int64_t count = offsets
+							? offsets[element_indices[first_line] + 1] - offsets[element_indices[first_line]]
+							: summation.n_iterations;
+						std::array<int64_t, N_SIMD> point_begin;
+						for (int lane = 0; lane < N_SIMD; lane++) {
+							const int e = element_indices[first_line + lane];
+							point_begin[lane] = offsets ? offsets[e] : static_cast<int64_t>(e) * count;
+						}
+						UNDERLYING_FLOAT* input = comp_input + first_line * padded_n_inputs;
+						UNDERLYING_FLOAT* output = accum + first_line * padded_n_outputs;
+						// Within this group, symbol s is stored at s * N_SIMD + lane.
+						// This covers scalar and SIMD layouts without separate fetching code.
+						// Ordinary element inputs stay unchanged throughout the point loop.
+						for (int64_t q = 0; q < count; q++) {
+							// 3a. Broadcast shared rule inputs to every lane. Count-only and
+							// dynamic summations have stride == 0 and skip this step.
+							for (int i = 0; i < summation.stride; i++) {
+								const UNDERLYING_FLOAT value = static_cast<UNDERLYING_FLOAT>(summation.data[q * summation.stride + i]);
+								for (int lane = 0; lane < N_SIMD; lane++) {
+									input[(summation.first_symbol_idx + i) * N_SIMD + lane] = value;
 								}
 							}
-						}
-						else if (N_SIMD == 8) {
-							for (int i = 0; i < summation.stride; i++) {
-								const UNDERLYING_FLOAT value = static_cast<UNDERLYING_FLOAT>(summation.data[sum_it * summation.stride + i]);
-								UNDERLYING_FLOAT* dst = comp_input + LINES*(begin + i);
-								for (int32_t j = 0; j < LINES; j++) { dst[j] = value; }
+							// 3b. Gather inputs specific to each element and point, such as
+							// coordinates, weights, or material data, into the same input layout.
+							for (size_t map_i = 0; map_i < this->mws->iter_maps.size(); map_i++) {
+								const auto& map = this->mws->iter_maps[map_i];
+								for (int i = 0; i < map.stride; i++) {
+									for (int lane = 0; lane < N_SIMD; lane++) {
+										const INPUT_FLOAT value = iteration_data[map_i][(point_begin[lane] + q) * map.stride + i];
+										if (check_mode_ON && std::isnan(value)) {
+											std::cout << "symx error: NaN in quadrature input " << map.first_symbol_idx + i
+											          << " for \"" << this->name << "\"" << std::endl;
+											exit(-1);
+										}
+										input[(map.first_symbol_idx + i) * N_SIMD + lane] = static_cast<UNDERLYING_FLOAT>(value);
+									}
+								}
 							}
-						}
-						else if (N_SIMD == 4) {
-							const int jump = 4*padded_n_inputs;
-							for (int i = 0; i < summation.stride; i++) {
-								const UNDERLYING_FLOAT value = static_cast<UNDERLYING_FLOAT>(summation.data[sum_it * summation.stride + i]);
-								UNDERLYING_FLOAT* dst = comp_input + N_SIMD*(begin + i);
-								for (int32_t j = 0; j < N_SIMD; j++) { dst[j] = value; }
-								dst += jump;
-								for (int32_t j = 0; j < N_SIMD; j++) { dst[j] = value; }
-							}
-						}
-
-						// Run and accumulate
-						const int n_runs = LINES/N_SIMD;
-						const int input_stride = padded_n_inputs * N_SIMD;
-						const int output_stride = padded_n_outputs * N_SIMD;
-						for (int32_t run_i = 0; run_i < n_runs; run_i++) {
-							f(reinterpret_cast<COMPILED_FLOAT*>(comp_input + run_i * input_stride),
-							  reinterpret_cast<COMPILED_FLOAT*>(scratch    + run_i * output_stride));
-						}
-						for (int i = 0; i < padded_n_outputs * LINES; i++) {
-							accum[i] += scratch[i];
+							// 3c. Evaluate one point and add all kernel outputs (including any
+							// derivatives). The group result reaches assembly after the full sum.
+							f(reinterpret_cast<COMPILED_FLOAT*>(input), reinterpret_cast<COMPILED_FLOAT*>(scratch));
+							for (int i = 0; i < padded_n_outputs * N_SIMD; i++) { output[i] += scratch[i]; }
 						}
 					}
 				}

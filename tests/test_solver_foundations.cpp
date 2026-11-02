@@ -112,13 +112,87 @@ TEST_CASE("Solver callbacks and direct solve context", "[Solver]")
         const auto coupled = make_element_hessians(true);
         REQUIRE(linear_solve_context.solve_direct_llt(coupled->hess, x, rhs, 1));
         const Eigen::VectorXd coupled_expected = Eigen::VectorXd::Constant(6, 0.4);
-        REQUIRE(approx(x, coupled_expected));
+        REQUIRE(approx(x, coupled_expected, 1e-7));
 
         REQUIRE(linear_solve_context.solve_direct_llt(coupled->hess, x, rhs, 1));
-        REQUIRE(approx(x, coupled_expected));
+        REQUIRE(approx(x, coupled_expected, 1e-7));
         REQUIRE(linear_solve_context.solve_direct_llt(uncoupled->hess, x, rhs, 1));
         REQUIRE(approx(x, uncoupled_expected));
     }
+
+    SECTION("direct LLT refreshes values and detects relocated blocks")
+    {
+        LinearSolveContext context;
+        const Eigen::VectorXd rhs = Eigen::VectorXd::LinSpaced(9, 1.0, 9.0);
+        Eigen::VectorXd x, product;
+        const Eigen::Matrix3d diagonal = 4.0 * Eigen::Matrix3d::Identity();
+        const Eigen::Matrix3d coupling = -0.25 * Eigen::Matrix3d::Identity();
+        const Eigen::Matrix3d remove_coupling = -coupling;
+        for (int neighbor : {1, 2, 1}) {
+            auto hess = std::make_shared<ElementHessians::spBSM::element_type>();
+            hess->start_insertion(9, 9);
+            for (int node = 0; node < 3; ++node) hess->add_block(3 * node, 3 * node, diagonal);
+            hess->add_block(0, 3 * neighbor, coupling);
+            hess->add_block(3 * neighbor, 0, coupling);
+            hess->end_insertion(1);
+            REQUIRE(context.solve_direct_llt(hess, x, rhs, 1));
+            hess->spmxv(product, x, 1);
+            REQUIRE(product.isApprox(rhs, 1e-10));
+
+            // Zero numeric entries without removing their allocated blocks.
+            REQUIRE(hess->update_block(0, 3 * neighbor, remove_coupling));
+            REQUIRE(hess->update_block(3 * neighbor, 0, remove_coupling));
+            REQUIRE(context.solve_direct_llt(hess, x, rhs, 1));
+            REQUIRE(x.isApprox(rhs / 4.0, 1e-10));
+        }
+        const auto smaller = make_element_hessians(false);
+        const Eigen::VectorXd smaller_rhs = Eigen::VectorXd::Ones(6);
+        REQUIRE(context.solve_direct_llt(smaller->hess, x, smaller_rhs, 1));
+        REQUIRE(x.isApprox(smaller_rhs / 2.0, 1e-10));
+        context.reset();
+        REQUIRE(context.solve_direct_llt(smaller->hess, x, smaller_rhs, 1));
+        REQUIRE(x.isApprox(smaller_rhs / 2.0, 1e-10));
+    }
+}
+
+TEST_CASE("Direct PPN recovers from an indefinite Hessian across Newton steps", "[Solver]")
+{
+    std::vector<std::array<int, 1>> conn{{0}};
+    std::vector<Eigen::Vector3d> x{{0.2, 0.0, 0.0}};
+    auto potential = GlobalPotential::create();
+    potential->add_potential("ppn_double_well", conn,
+        [&](MappedWorkspace<double>& mws, Element& elem) {
+            const Vector v = mws.make_vector(x, elem[0]);
+            return 0.25 * v[0].powN(4) - 0.5 * v[0].powN(2)
+                + 0.5 * (v[1].powN(2) + v[2].powN(2));
+        });
+    potential->add_dof(x);
+    auto context = Context::create();
+    context->output->set_enabled(false);
+    NewtonsMethod newton(potential, context);
+    newton.settings.linear_solver = LinearSolver::DirectLLT;
+    newton.settings.projection_mode = ProjectionToPD::Progressive;
+    newton.settings.project_to_pd_use_mirroring = true;
+    newton.settings.step_cap = 0.25;
+    newton.settings.max_iterations = 30;
+
+    double energy = 0.0;
+    Eigen::VectorXd gradient, direction;
+    auto elements = newton.get_compiled()->evaluate_P__dP_du__local_d2P_du2(energy, gradient);
+    auto hess = elements->assemble_global(context->n_threads, 3);
+    const auto rows = hess->get_block_row_offsets();
+    const auto cols = hess->get_block_column_indices();
+    LinearSolveContext unprojected;
+    REQUIRE_FALSE(unprojected.solve_direct_llt(hess, direction, gradient, context->n_threads));
+
+    REQUIRE(newton.solve() == SolverReturn::Successful);
+    REQUIRE(approx(x[0], Eigen::Vector3d(1.0, 0.0, 0.0), 1e-5));
+    const auto& stats = newton.get_last_solve_stats();
+    REQUIRE(stats.newton_iterations > 1);
+    REQUIRE(stats.n_projected_hessians > 0);
+    REQUIRE(context->logger->get_timer_count("linear_system_solve") > stats.newton_iterations);
+    REQUIRE(hess->get_block_row_offsets() == rows);
+    REQUIRE(hess->get_block_column_indices() == cols);
 }
 
 TEST_CASE("Thread-local accumulators require an explicit reduction", "[Solver]")

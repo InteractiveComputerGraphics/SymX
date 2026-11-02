@@ -268,4 +268,33 @@ TEST_CASE("Two energies with conditional", "[GlobalEnergy]")
 	REQUIRE(approx(P_symx, P, 1e-8));
 	REQUIRE(grad_symx.isApprox(grad, 1e-8));
 	REQUIRE(hess_symx_eigen.isApprox(hess, 1e-8));
+
+    // Both compiled solver types expose components that sum to their global result.
+    const auto check_components = [&](auto& evaluator) {
+        const auto energies = evaluator.evaluate_P_components();
+        const auto components = evaluator.evaluate_P__dP_du_components();
+        double total_energy = 0.0;
+        Eigen::VectorXd total_gradient;
+        evaluator.evaluate_P__dP_du(total_energy, total_gradient);
+
+        REQUIRE(energies.size() == 2);
+        REQUIRE(components.energies.size() == 2);
+        REQUIRE(components.gradients.size() == 2);
+        double energy_sum = 0.0;
+        Eigen::VectorXd gradient_sum = Eigen::VectorXd::Zero(ndofs);
+        for (const auto& [name, energy] : energies) {
+            REQUIRE(approx(energy, components.energies.at(name), 1e-8));
+            REQUIRE(components.gradients.at(name).size() == ndofs);
+            energy_sum += energy;
+            gradient_sum += components.gradients.at(name);
+        }
+        REQUIRE(approx(energy_sum, total_energy, 1e-8));
+        REQUIRE(gradient_sum.isApprox(total_gradient, 1e-8));
+    };
+    check_components(compiled);
+    FirstOrderCompiledGlobal first_order(G, context);
+    check_components(first_order);
+    // Creating the other solver order must leave the original kernels usable.
+    compiled.evaluate_P(P_symx);
+    REQUIRE(approx(P_symx, P, 1e-8));
 }

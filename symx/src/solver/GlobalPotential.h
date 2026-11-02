@@ -4,6 +4,13 @@
 
 namespace symx
 {
+    using MaterialFunc = std::function<Scalar(const Matrix&)>;
+    struct FemEnergySplit {
+        Matrix x; // node-major mapped positions, n_nodes x 3
+        Matrix B; // state-independent coefficients, n_nodes x n_features
+        MaterialFunc material;
+    };
+
     /*
      * Aggregates multiple Potential objects and DOF sets in a structure 
      * suitable for Newton-based optimization.
@@ -18,6 +25,8 @@ namespace symx
         /* Definitions */
         using DefFunc = std::function<Scalar(MappedWorkspace<double>&, Element&)>;
         using DefWCondFunc = std::function<std::pair<Scalar, Scalar>(MappedWorkspace<double>&, Element&)>;
+        using FemSplitFunc = std::function<FemEnergySplit(MappedWorkspace<double>&, Element&)>;
+        using FemSplitWCondFunc = std::function<std::pair<FemEnergySplit, Scalar>(MappedWorkspace<double>&, Element&)>;
 
     private:
         /* Fields */
@@ -25,6 +34,8 @@ namespace symx
         std::vector<DataMap<double>> dof_maps; // non-const because we may want to modify dofs (newton solve). No connectivity, stride or idx needed here.
         std::vector<int32_t> dof_offsets;  // Cumulative offsets for flattening all DOFs into one array
         std::vector<std::string> dof_labels;
+
+        void verify_potential_has_no_quadrature_dofs(const MappedWorkspace<double>& mws) const;
 
     public:
         /* Methods */
@@ -36,20 +47,34 @@ namespace symx
         //// Base methods
         void add_potential(const std::string& name, spMWS<double> mws, Element& elem, DefFunc definition_callback);
         void add_potential(const std::string& name, spMWS<double> mws, Element& elem, DefWCondFunc definition_with_conditional_callback);
+        void add_potential_fem(const std::string& name, spMWS<double> mws, Element& elem, FemSplitFunc definition_callback);
+        void add_potential_fem(const std::string& name, spMWS<double> mws, Element& elem, FemSplitWCondFunc definition_callback);
 
         //// Convenience methods
 		void add_potential(const std::string& name, std::function<const int32_t* ()> data, std::function<int32_t()> n_elements, const int32_t stride, DefFunc definition_callback);
 		void add_potential(const std::string& name, std::function<const int32_t* ()> data, std::function<int32_t()> n_elements, const int32_t stride, DefWCondFunc definition_with_conditional_callback);
         void add_potential(const std::string& name, const std::vector<int32_t>& arr, const int32_t n_items_per_element, DefFunc definition_callback);
         void add_potential(const std::string& name, const std::vector<int32_t>& arr, const int32_t n_items_per_element, DefWCondFunc definition_with_conditional_callback);
+        void add_potential_fem(const std::string& name, const std::vector<int32_t>& arr, int32_t n_items_per_element, FemSplitFunc definition_callback);
+        void add_potential_fem(const std::string& name, const std::vector<int32_t>& arr, int32_t n_items_per_element, FemSplitWCondFunc definition_callback);
+		void add_potential_fem(const std::string& name, std::function<const int32_t* ()> data, std::function<int32_t()> n_elements, int32_t stride, FemSplitFunc definition_callback);
+		void add_potential_fem(const std::string& name, std::function<const int32_t* ()> data, std::function<int32_t()> n_elements, int32_t stride, FemSplitWCondFunc definition_callback);
 		template<std::size_t N>
 		void add_potential(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, DefFunc definition_callback);
 		template<std::size_t N>
 		void add_potential(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, DefWCondFunc definition_with_conditional_callback);
 		template<std::size_t N>
+		void add_potential_fem(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, FemSplitFunc definition_callback);
+		template<std::size_t N>
+		void add_potential_fem(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, FemSplitWCondFunc definition_callback);
+		template<std::size_t N>
 		void add_potential(const std::string& name, const LabelledConnectivity<N>& conn, DefFunc definition_callback);
 		template<std::size_t N>
 		void add_potential(const std::string& name, const LabelledConnectivity<N>& conn, DefWCondFunc definition_with_conditional_callback);
+		template<std::size_t N>
+		void add_potential_fem(const std::string& name, const LabelledConnectivity<N>& conn, FemSplitFunc definition_callback);
+		template<std::size_t N>
+		void add_potential_fem(const std::string& name, const LabelledConnectivity<N>& conn, FemSplitWCondFunc definition_callback);
 
         // Add DoFs
         void add_dof(std::function<std::uintptr_t()> id, std::function<double*()> data, std::function<int32_t()> flat_size, const std::string& name = "");
@@ -104,6 +129,31 @@ namespace symx
     {
         auto [mws, elem] = MappedWorkspace<double>::create(conn);
         this->add_potential(name, mws, elem, definition_with_conditional_callback);
+    }
+
+    template<std::size_t N>
+    inline void GlobalPotential::add_potential_fem(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, FemSplitFunc callback)
+    {
+        auto [mws, elem] = MappedWorkspace<double>::create(arr);
+        this->add_potential_fem(name, mws, elem, callback);
+    }
+    template<std::size_t N>
+    inline void GlobalPotential::add_potential_fem(const std::string& name, const std::vector<std::array<int32_t, N>>& arr, FemSplitWCondFunc callback)
+    {
+        auto [mws, elem] = MappedWorkspace<double>::create(arr);
+        this->add_potential_fem(name, mws, elem, callback);
+    }
+    template<std::size_t N>
+    inline void GlobalPotential::add_potential_fem(const std::string& name, const LabelledConnectivity<N>& conn, FemSplitFunc callback)
+    {
+        auto [mws, elem] = MappedWorkspace<double>::create(conn);
+        this->add_potential_fem(name, mws, elem, callback);
+    }
+    template<std::size_t N>
+    inline void GlobalPotential::add_potential_fem(const std::string& name, const LabelledConnectivity<N>& conn, FemSplitWCondFunc callback)
+    {
+        auto [mws, elem] = MappedWorkspace<double>::create(conn);
+        this->add_potential_fem(name, mws, elem, callback);
     }
 
     template<typename STATIC_VECTOR>

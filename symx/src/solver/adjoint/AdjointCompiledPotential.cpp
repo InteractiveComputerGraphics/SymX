@@ -23,8 +23,8 @@ AdjointCompiledPotential::AdjointCompiledPotential(const Potential& potential, s
 
     // Checksum
     std::string pre_hash = get_checksum(all_symbols);
+    if (potential.is_factorized()) { pre_hash += "_fem_mixed"; }
     const std::string checksum = potential.get_checksum(pre_hash);
-
     // Build condition if not provided externally (handles conditional potentials)
     if (!this->condition) {
         this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks);

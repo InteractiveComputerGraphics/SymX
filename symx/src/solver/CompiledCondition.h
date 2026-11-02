@@ -18,6 +18,7 @@ namespace symx
     public:
         /* Methods */
         CompiledCondition(const Potential& potential, const std::string& checksum, const std::string &compilation_directory, DeferredParallelTasks& tasks);
+        CompiledCondition(const Potential& potential, const std::string& checksum, const std::string &compilation_directory, DeferredParallelTasks& tasks, const std::string& artifact_suffix);
         bool was_cached() const;
         bool has_condition() const;
         std::vector<uint8_t>& get_element_condition();

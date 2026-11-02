@@ -42,11 +42,27 @@ symx::Sequence::Sequence(const std::vector<Scalar>& expr)
 
 	const std::vector<Expr>& expressions = expr[0].get_expression_graph()->get_expressions();
 
-	// Find unique branching points
+	// Find branching points reachable from the requested outputs. Material substitution
+	// leaves unused branches in the graph, which must not consume the branch limit.
 	std::unordered_map<int32_t, Expr> unique_branch_conditions;
-	for (const Expr& e : expressions) {
+	std::vector<uint8_t> visited(expressions.size(), 0);
+	std::vector<int32_t> stack;
+	for (const Scalar& output : expr) { stack.push_back(output.expr_id); }
+	while (!stack.empty()) {
+		const int32_t id = stack.back();
+		stack.pop_back();
+		if (visited[id]) { continue; }
+		visited[id] = 1;
+		const Expr& e = expressions[id];
 		if (e.type == ExprType::Branch) {
 			unique_branch_conditions[e.cond] = e;
+			stack.push_back(e.cond);
+			stack.push_back(e.a);
+			stack.push_back(e.b);
+		}
+		else if (e.is_operation()) {
+			stack.push_back(e.a);
+			if (e.b != -1 && e.type != ExprType::PowN) { stack.push_back(e.b); }
 		}
 	}
 	std::vector<Expr> branches;

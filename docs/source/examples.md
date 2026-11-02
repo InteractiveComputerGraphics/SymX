@@ -84,6 +84,7 @@ Useful for understanding performance and the trade-offs between assembler back-e
 
 ---
 
+(rubber-extrusion-example)=
 ## Rubber Extrusion
 
 ![Rubber extrusion](_static/rubber_extrusion.jpg)
@@ -100,6 +101,10 @@ Key things to observe:
 - Structured logging.
 
 Showcases how to use the high-level `NewtonsMethod` to solve FEM problems compactly and with minimal involvement from the user.
+
+The `RubberExtrusionMode` argument selects `StandardFixedSummation` for a shared rule, `StandardIndexedSummation` for indexed integration-point data, or `FactorizedFEM` for a split energy definition.
+The call in [`examples_main.cpp`](../../examples/examples_main.cpp) selects `FactorizedFEM`; change this argument to compare the definitions.
+See [Advanced FEM and Integration](advanced_integration.md) for the corresponding APIs and for variable-length summations.
 
 ---
 

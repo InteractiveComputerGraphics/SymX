@@ -3,6 +3,7 @@
 #include <Eigen/SparseCholesky>
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 #ifdef SYMX_ENABLE_MKL
 #include <Eigen/PardisoSupport>
@@ -13,33 +14,29 @@ namespace symx
 {
     namespace
     {
-        using SparseMatrix = Eigen::SparseMatrix<double>;
+        using SparseMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor>;
         using StorageIndex = SparseMatrix::StorageIndex;
 
         struct SparsityPattern
         {
-            int rows = 0;
-            int cols = 0;
-            int nonzeros = 0;
-            std::vector<StorageIndex> outer_indices;
-            std::vector<StorageIndex> inner_indices;
+            int rows = -1;
+            int cols = -1;
+            std::vector<uint64_t> block_row_offsets;
+            std::vector<int> block_column_indices;
 
-            bool matches(const SparseMatrix& matrix) const
+            bool matches(const ElementHessians::spBSM& matrix) const
             {
-                if (rows != matrix.rows() || cols != matrix.cols() || nonzeros != matrix.nonZeros()) {
-                    return false;
-                }
-                return std::equal(outer_indices.begin(), outer_indices.end(), matrix.outerIndexPtr())
-                    && std::equal(inner_indices.begin(), inner_indices.end(), matrix.innerIndexPtr());
+                return rows == matrix->get_n_rows() && cols == matrix->get_n_cols()
+                    && block_row_offsets == matrix->get_block_row_offsets()
+                    && block_column_indices == matrix->get_block_column_indices();
             }
 
-            void assign(const SparseMatrix& matrix)
+            void assign(const ElementHessians::spBSM& matrix)
             {
-                rows = matrix.rows();
-                cols = matrix.cols();
-                nonzeros = matrix.nonZeros();
-                outer_indices.assign(matrix.outerIndexPtr(), matrix.outerIndexPtr() + matrix.outerSize() + 1);
-                inner_indices.assign(matrix.innerIndexPtr(), matrix.innerIndexPtr() + matrix.nonZeros());
+                rows = matrix->get_n_rows();
+                cols = matrix->get_n_cols();
+                block_row_offsets = matrix->get_block_row_offsets();
+                block_column_indices = matrix->get_block_column_indices();
             }
         };
     }
@@ -52,7 +49,8 @@ namespace symx
         Eigen::SimplicialLLT<SparseMatrix> solver;
 #endif
         bool analyze_pattern_done = false;
-        SparsityPattern analyzed_pattern;
+        SparseMatrix sparse_hess;
+        SparsityPattern pattern;
     };
 
     LinearSolveContext::LinearSolveContext() : impl(std::make_unique<Impl>()) {}
@@ -69,13 +67,61 @@ namespace symx
         const Eigen::VectorXd& rhs,
         const int n_threads)
     {
+        constexpr int block_size = ElementHessians::BLOCK_SIZE;
+        constexpr int block_entries = block_size * block_size;
+        // The Newton Hessian consists of complete square blocks.
+        if (rhs.size() != hess->get_n_rows() || rhs.size() != hess->get_n_cols()
+            || rhs.size() % block_size != 0) {
+            return false;
+        }
         const int n = (int)rhs.size();
-        std::vector<Eigen::Triplet<double>> triplets;
-        hess->to_triplets(triplets);
-
-        SparseMatrix sparse_hess(n, n);
-        sparse_hess.setFromTriplets(triplets.begin(), triplets.end());
-        sparse_hess.makeCompressed();
+        const auto& rows = hess->get_block_row_offsets();
+        const auto& cols = hess->get_block_column_indices();
+        const auto* values = hess->get_block_values();
+        if (rows.back() > std::numeric_limits<StorageIndex>::max() / block_entries) {
+            return false;
+        }
+        const StorageIndex nonzeros = static_cast<StorageIndex>(rows.back() * block_entries);
+        SparseMatrix& sparse_hess = this->impl->sparse_hess;
+        if (!this->impl->pattern.matches(hess)) {
+            this->impl->analyze_pattern_done = false;
+            sparse_hess.resize(n, n);
+            sparse_hess.reserve(nonzeros);
+            // BSM block columns are sorted. Expand directly into compressed rows,
+            // retaining explicit zeros so numeric changes cannot alter the pattern.
+            for (int block_row = 0; block_row < n / block_size; ++block_row) {
+                for (int row = 0; row < block_size; ++row) {
+                    const int global_row = block_size * block_row + row;
+                    sparse_hess.startVec(global_row);
+                    for (uint64_t block = rows[block_row]; block < rows[block_row + 1]; ++block) {
+                        for (int col = 0; col < block_size; ++col) {
+                            sparse_hess.insertBack(global_row, cols[block] + col) =
+                                static_cast<double>(values[block_entries * block + block_size * col + row]);
+                        }
+                    }
+                }
+            }
+            sparse_hess.finalize();
+            this->impl->pattern.assign(hess);
+        }
+        else {
+            double* destination = sparse_hess.valuePtr();
+            const StorageIndex* outer = sparse_hess.outerIndexPtr();
+            const int copy_threads = n_threads > 0 ? n_threads : 1;
+            #pragma omp parallel for schedule(static) num_threads(copy_threads) if(copy_threads > 1 && nonzeros >= 32768)
+            for (int block_row = 0; block_row < n / block_size; ++block_row) {
+                // Each worker owns complete scalar rows; no shared writes.
+                for (int row = 0; row < block_size; ++row) {
+                    StorageIndex offset = outer[block_size * block_row + row];
+                    for (uint64_t block = rows[block_row]; block < rows[block_row + 1]; ++block) {
+                        for (int col = 0; col < block_size; ++col) {
+                            destination[offset++] =
+                                static_cast<double>(values[block_entries * block + block_size * col + row]);
+                        }
+                    }
+                }
+            }
+        }
 
 #ifdef SYMX_ENABLE_MKL
         if (n_threads > 0) {
@@ -83,16 +129,12 @@ namespace symx
         }
 #endif
 
-        const bool pattern_matches = this->impl->analyze_pattern_done
-            && this->impl->analyzed_pattern.matches(sparse_hess);
-        if (!pattern_matches) {
-            this->impl->analyze_pattern_done = false;
+        if (!this->impl->analyze_pattern_done) {
             this->impl->solver.analyzePattern(sparse_hess);
             if (this->impl->solver.info() != Eigen::Success) {
                 return false;
             }
             this->impl->analyze_pattern_done = true;
-            this->impl->analyzed_pattern.assign(sparse_hess);
         }
         this->impl->solver.factorize(sparse_hess);
 

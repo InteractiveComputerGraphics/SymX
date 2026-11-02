@@ -58,7 +58,7 @@ namespace symx
 		/* Fields */
 		Compilation compilation;
 		spMWS<INPUT_FLOAT> mws;
-		
+
 		// Thread buffers - using unique_ptr to ensure each buffer is independently heap-allocated,
 		// preventing false sharing of cache lines between threads when buffers are accessed/resized.
 		std::vector<std::unique_ptr<simd::avector<char, 64>>> thread_buf;  // [thread_id][buffer_idx]
@@ -114,7 +114,9 @@ namespace symx
 		bool load_if_cached(const spMWS<INPUT_FLOAT>& mws, const std::string& name, const std::string& folder, const std::string& cache_id);
 		void compile(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id = "");
 		void try_load_otherwise_compile(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id = "");
-		
+		void compile_factorized(const spMWS<INPUT_FLOAT>& mws, const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const std::string& name, const std::string& folder, const std::string& cache_id = "");
+		void compile_factorized_mapped(const spMWS<INPUT_FLOAT>& mws, const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const Matrix& J, const Matrix& Hgeo, const std::string& name, const std::string& folder, const std::string& cache_id = "");
+
 		bool is_valid() const;
 		bool was_cached() const;
 		Info get_info() const;
@@ -138,7 +140,7 @@ namespace symx
 		void run(int32_t n_threads, CALLBACK_T callback, const std::vector<uint8_t>& is_element_active);
 
 	private:
-		void _check_types();
+		void _check_types(const spMWS<INPUT_FLOAT>& mws);
 	};
 
 
@@ -161,7 +163,7 @@ namespace symx
 	}
 
 	template<typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
-	inline void CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::_check_types()
+	inline void CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::_check_types(const spMWS<INPUT_FLOAT>& mws)
 	{
 		static_assert((std::is_same_v<INPUT_FLOAT, float> || std::is_same_v<INPUT_FLOAT, double>), "INPUT_FLOAT must be {float, double}");
 		static_assert((
@@ -178,6 +180,12 @@ namespace symx
 #endif
 			),
 			"COMPILED_FLOAT must be {float, double, __m128d, __m128, __m256d, __m256}");
+		if constexpr (get_n_items_in_simd<COMPILED_FLOAT>() > 1) {
+			if (mws->summation.is_dynamic()) {
+				std::cout << "symx error: dynamic summation does not support SIMD compiled types; use scalar float or double." << std::endl;
+				exit(-1);
+			}
+		}
 	}
 	template<typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
 	inline CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::CompiledInLoop(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id)
@@ -194,8 +202,24 @@ namespace symx
     {
 		this->mws = mws;
 		this->name = name;
+		this->_check_types(mws);
 		this->compilation.template compile<COMPILED_FLOAT>(expr, name, folder, cache_id);
-		this->_check_types();
+	}
+    template <typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
+    inline void CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::compile_factorized(const spMWS<INPUT_FLOAT> &mws, const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const std::string& name, const std::string& folder, const std::string& cache_id)
+    {
+		this->mws = mws;
+		this->name = name;
+		this->_check_types(mws);
+		this->compilation.template compile_factorized<COMPILED_FLOAT>(energy, P, A, B, name, folder, cache_id);
+	}
+    template <typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
+    inline void CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::compile_factorized_mapped(const spMWS<INPUT_FLOAT> &mws, const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const Matrix& J, const Matrix& Hgeo, const std::string& name, const std::string& folder, const std::string& cache_id)
+    {
+		this->mws = mws;
+		this->name = name;
+		this->_check_types(mws);
+		this->compilation.template compile_factorized_mapped<COMPILED_FLOAT>(energy, P, A, B, J, Hgeo, name, folder, cache_id);
 	}
 	template<typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
 	inline void CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::try_load_otherwise_compile(const spMWS<INPUT_FLOAT>& mws, const std::vector<Scalar>& expr, const std::string& name, const std::string& folder, const std::string& cache_id)
@@ -235,9 +259,9 @@ namespace symx
     template <typename INPUT_FLOAT, typename COMPILED_FLOAT, typename OUTPUT_FLOAT>
     inline bool CompiledInLoop<INPUT_FLOAT, COMPILED_FLOAT, OUTPUT_FLOAT>::load_if_cached(const spMWS<INPUT_FLOAT>& mws, const std::string& name, const std::string& folder, const std::string& cache_id)
     {
+		this->_check_types(mws);
 		const bool success = this->compilation.template load_if_cached<COMPILED_FLOAT>(name, folder, cache_id);
 		if (success) {
-			this->_check_types();
 			this->mws = mws;
 			this->name = name;
 		}

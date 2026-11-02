@@ -37,6 +37,7 @@ FirstOrderCompiledPotential::FirstOrderCompiledPotential(
     }
 
     std::string pre_hash = potential.get_name();
+    if (potential.is_factorized()) { pre_hash += "_factorized"; }
     for (const Scalar& dof : dofs) {
         pre_hash += std::to_string(dof.get_symbol_idx());
     }
@@ -44,10 +45,11 @@ FirstOrderCompiledPotential::FirstOrderCompiledPotential(
     if (potential.has_conditional()) {
         checksum += potential.get_condition().get_checksum();
     }
+    // Both solver orders may coexist for the same potential. Keep their artifacts
+    // separate: their checksums can differ after symbolic differentiation.
+    this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks, "_first_order");
 
-    this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks);
-
-    const std::string name = potential.get_name();
+    const std::string name = potential.get_name() + "_first_order";
     this->cached = this->P.load_if_cached(this->mws, name + "_P", compilation_directory, checksum);
     this->cached &= this->P__dP_du.load_if_cached(this->mws, name + "_P__dP_du", compilation_directory, checksum);
     this->cached &= this->condition->was_cached();

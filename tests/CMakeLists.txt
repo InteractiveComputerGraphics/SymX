@@ -12,8 +12,12 @@ set(SOURCE_FILES
     test_matrix.cpp
     test_compilation.cpp
     test_diff.cpp
+    test_substitute.cpp
     test_mapped_workspace_make.cpp
     test_loops.cpp
+    test_quadrature_data.cpp
+    test_dynamic_summation.cpp
+    test_factorized_fem.cpp
     test_global_potential.cpp
     test_newton_method.cpp
     test_solver_foundations.cpp

@@ -21,11 +21,13 @@ Finally, the execution can occur.
 Because SymX has access to the DoF arrays (pointer and size), it can autonomously update their values in-place until the solution is reached.
 Multiple sets of degrees of freedom are allowed.
 
+For factorized FEM energies, mapped node positions, and integration data or point counts that vary by element, see [Advanced FEM and Integration](advanced_integration.md).
+
 ## Example
 We will build a 3D static elasticity solver using a FEM discretization for the Stable NeoHookean constitutive model and boundary conditions with the penalty method.
 The solver is compatible with the natively supported FEM element types SymX supports: `Tet3, Hex8, Tet10, Hex27`.
 Note that we use _Stable_ NeoHookean for the upcoming simulation examples for improved stability.
-A demo of solver can be found in [`rubber_extrusion.cpp`](../../examples/rubber_extrusion.cpp).
+The [rubber extrusion showcase](rubber-extrusion-example) provides a complete solver in [`rubber_extrusion.cpp`](../../examples/rubber_extrusion.cpp), with shared-rule, indexed-quadrature, and factorized FEM definitions.
 
 ```cpp
 struct Data
