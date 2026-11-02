@@ -338,6 +338,84 @@ TEST_CASE("Standard FEM B reproduces deformation gradients", "[factorized]")
     }
 }
 
+TEST_CASE("Factorized FEM supports rectangular B for lines and membranes", "[factorized]")
+{
+    // Rest configurations lie on the x axis (r = 1) or in the xy plane (r = 2), so the first
+    // r rest coordinates are the reference coordinates. B is n_nodes x r and F = x^T B is 3 x r.
+    for (int r : {1, 2}) {
+        std::vector<Eigen::Vector3d> rest;
+        std::vector<int32_t> connectivity;
+        if (r == 1) {
+            rest = {{0.0, 0.0, 0.0}, {0.7, 0.0, 0.0}, {1.5, 0.0, 0.0}};
+            connectivity = {0, 1, 1, 2};
+        }
+        else {
+            rest = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {0.1, 0.9, 0.0}, {1.2, 1.0, 0.0}};
+            connectivity = {0, 1, 2, 1, 3, 2};
+        }
+        const int32_t stride = r + 1;
+        std::vector<Eigen::Vector3d> x = rest;
+        for (size_t i = 0; i < x.size(); i++) {
+            // Stretch in-plane and lift out of the rest plane.
+            x[i] += Eigen::Vector3d(0.05 * i, -0.03 * i * i, 0.04 + 0.02 * i);
+        }
+
+        auto split = [&](MappedWorkspace<double>& mws, Element& e) {
+            auto X = mws.make_vectors(rest, e);
+            auto xv = mws.make_vectors(x, e);
+            Matrix nodes(collect_scalars(xv), {stride, 3});
+            std::vector<Scalar> b;
+            Scalar measure = X[1][0] - X[0][0];  // Segment length for r = 1
+            if (r == 1) {
+                b = {-1.0 / measure, 1.0 / measure};
+            }
+            else {
+                Matrix Dm({X[1][0] - X[0][0], X[2][0] - X[0][0],
+                           X[1][1] - X[0][1], X[2][1] - X[0][1]}, {2, 2});
+                Matrix Dm_inv = Dm.inv();
+                b = {-Dm_inv(0, 0) - Dm_inv(1, 0), -Dm_inv(0, 1) - Dm_inv(1, 1),
+                      Dm_inv(0, 0), Dm_inv(0, 1),
+                      Dm_inv(1, 0), Dm_inv(1, 1)};
+                measure = 0.5 * Dm.det();  // Triangle area
+            }
+            auto material = [=](const Matrix& F) {
+                Matrix C = F.transpose() * F;
+                if (r == 1) { return measure * (sqrt(C(0, 0)) - 1.0).powN(2); }
+                Matrix E = (C - Matrix::identity(2, F(0, 0))) * 0.5;
+                return measure * (E.frobenius_norm_sq() + 0.3 * E.trace().powN(2));
+            };
+            return FemEnergySplit{nodes, Matrix(b, {stride, r}), material};
+        };
+
+        auto make = [&](bool factorized) {
+            auto G = GlobalPotential::create();
+            const std::string name = "rectangular_B_r" + std::to_string(r);
+            if (factorized) {
+                G->add_potential_fem(name, connectivity, stride, split);
+            }
+            else {
+                G->add_potential(name, connectivity, stride,
+                    [&](MappedWorkspace<double>& mws, Element& e) {
+                        const FemEnergySplit s = split(mws, e);
+                        return s.material(s.x.transpose() * s.B);
+                    });
+            }
+            G->add_dof(x);
+            return G;
+        };
+
+        const int n_dofs = 3 * static_cast<int>(x.size());
+        INFO("r = " << r);
+        require_same(evaluate(make(false), n_dofs), evaluate(make(true), n_dofs));
+
+        // At rest C = I, so energy and gradient vanish only if B maps x to the correct F.
+        x = rest;
+        const Result at_rest = evaluate(make(true), n_dofs);
+        REQUIRE(approx(at_rest.energy, 0.0, 1e-12));
+        REQUIRE(at_rest.gradient.norm() < 1e-12);
+    }
+}
+
 TEST_CASE("Factorized material ignores unreachable conditional branches", "[factorized]")
 {
     std::vector<std::array<int32_t, 1>> connectivity = {{0}};

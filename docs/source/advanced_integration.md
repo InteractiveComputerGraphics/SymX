@@ -12,7 +12,8 @@ This page covers:
 
 For high-order elements, differentiating the complete scalar energy with respect to every nodal coordinate can produce large symbolic expressions and generated kernels.
 Declaring the material density separately from the deformation gradient lets SymX differentiate the smaller material expression and apply the remaining matrix products in compact loops.
-This reduces symbolic differentiation and code generation work and can significantly improve evaluation speed for high-order elements.
+This greatly reduces symbolic differentiation, code generation, and compilation time for high-order elements, with a modest gain in evaluation speed.
+The element energy, gradient, and Hessian are the same as those of the standard definition, up to round-off.
 
 At one integration point, collect the nodal positions in $\mathbf x\in\mathbb R^{n\times3}$.
 The deformation gradient is linear in these positions:
@@ -23,7 +24,9 @@ $$
 \qquad \psi(\mathbf F) = w_q\det(\mathbf J_{\mathbf X})\,\Psi(\mathbf F),
 $$
 
-where $\mathbf B\in\mathbb R^{n\times3}$ contains the shape function gradients in rest coordinates and is independent of the current positions.
+where $\mathbf B\in\mathbb R^{n\times r}$ is independent of the current positions.
+For standard isoparametric elements, $\mathbf B$ contains the shape function gradients in rest coordinates, and $r$ is the reference dimension: 3 for solids, 2 for membranes and shells, and 1 for lines.
+For $r<3$, $\mathbf F\in\mathbb R^{3\times r}$ is rectangular, and the material density is written in terms of it, for example through $\mathbf C=\mathbf F^\mathsf T\mathbf F$, and $\det(\mathbf J_{\mathbf X})$ is replaced by the corresponding area or length element.
 Writing the coordinates and deformation gradient as vectors $\mathbf q$ and $\mathbf f$, this is a linear map $\mathbf f=\mathbf L\mathbf q$.
 The chain rule gives
 
@@ -96,6 +99,9 @@ G->add_potential_fem("stable_neo_hookean_" + get_name(data.element_type),
 Both versions use the same integration rule and define the same discrete energy.
 Capture local symbols by value in `psi`, since SymX calls it after the definition callback returns.
 Its dependence on the current positions must be through `F`; `B` must be independent of the state DoFs.
+As with `add_potential()`, the callback can also return a `std::pair<FemEnergySplit, Scalar>` to add a potential-level condition.
+The material density itself may contain branches.
+
 In either version, register the current positions as DoFs:
 
 ```cpp
@@ -124,6 +130,8 @@ $$
 $$
 
 The final term is the geometric stiffness of the map and is included automatically.
+It can make the element Hessian indefinite even for a convex material, so use a projection mode that projects element Hessians to PD as needed, such as the default `ProjectionToPD::ProjectedNewton` (see [Newton's method](newtons_method.md)).
+Maps that couple a node's position to other nodes' DoFs, such as skinning or reduced coordinates, are not supported and are rejected; use `add_potential()` for those.
 
 
 ## Indexable Summation Data
