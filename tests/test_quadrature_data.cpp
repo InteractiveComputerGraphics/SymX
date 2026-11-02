@@ -33,7 +33,7 @@ static void check_quadrature_refresh(const std::string& name, const double toler
     auto [mws, elem] = MappedWorkspace<double>::create(connectivity);
     Scalar a = mws->make_scalar(x, elem[0]);
     Scalar b = mws->make_scalar(x, elem[1]);
-    Scalar energy = mws->add_for_each(3, [&]() {
+    Scalar energy = mws->add_for_each(3, [&, mws = mws]() {
         Scalar w = mws->make_quadrature_scalar(weights);
         Vector t = mws->make_quadrature_vector(targets);
         // The cross term exercises the two off-diagonal Hessian entries.
@@ -130,7 +130,7 @@ TEST_CASE("Quadrature data and fixed summation have the same derivatives", "[qua
     std::vector<int64_t> offsets = {0, 3, 6};
     auto [dynamic, dynamic_elem] = MappedWorkspace<double>::create(connectivity);
     Scalar xd = dynamic->make_scalar(x, dynamic_elem[0]);
-    Scalar ed = dynamic->add_for_each(offsets, [&]() {
+    Scalar ed = dynamic->add_for_each(offsets, [&, dynamic = dynamic]() {
         Vector point = dynamic->make_quadrature_vector(per_element_rule);
         return point[0] * (xd - point[1]).powN(2);
     });
