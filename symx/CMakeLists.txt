@@ -258,8 +258,17 @@ endif()
 
 ## fmt — compiled library; used only inside .cpp files, not in public headers.
 # Parse the bundled fmt version once so we can print it in the status message.
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/extern/fmt/include/fmt/core.h"
-    _fmt_ver_str REGEX "^#define FMT_VERSION ")
+# fmt >= 11 defines FMT_VERSION in base.h; older releases define it in core.h.
+set(_fmt_ver_str "")
+foreach(_fmt_ver_header base.h core.h)
+    set(_fmt_ver_path "${CMAKE_CURRENT_SOURCE_DIR}/extern/fmt/include/fmt/${_fmt_ver_header}")
+    if(EXISTS "${_fmt_ver_path}")
+        file(STRINGS "${_fmt_ver_path}" _fmt_ver_str REGEX "^#define FMT_VERSION ")
+    endif()
+    if(_fmt_ver_str)
+        break()
+    endif()
+endforeach()
 if(_fmt_ver_str MATCHES "FMT_VERSION ([0-9]+)")
     math(EXPR _fmaj "${CMAKE_MATCH_1} / 10000")
     math(EXPR _fmin "(${CMAKE_MATCH_1} % 10000) / 100")
@@ -280,14 +289,18 @@ else()
     else()
         unset(fmt_DIR CACHE)  # prevent NOTFOUND entry from polluting the CMake cache
         message(STATUS "SymX: fmt — using copy bundled with SymX (v${_fmaj}.${_fmin}.${_fpat})")
-        add_subdirectory(extern/fmt)
+        # Mark fmt's headers as system headers for consumers (as before with SYMX_FMT_PUBLIC).
+        set(FMT_SYSTEM_HEADERS ON)
+        add_subdirectory(extern/fmt EXCLUDE_FROM_ALL)
     endif()
 endif()
 
-target_link_libraries(symx PRIVATE fmt::fmt)
+# Link publicly when consumers use fmt, so they also receive fmt's usage
+# requirements (e.g. /utf-8 on MSVC, which fmt >= 11 enforces).
 if(SYMX_FMT_PUBLIC)
-    target_include_directories(symx SYSTEM PUBLIC
-        $<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_link_libraries(symx PUBLIC fmt::fmt)
+else()
+    target_link_libraries(symx PRIVATE fmt::fmt)
 endif()
 
 ## BlockedSparseMatrix — header-only, types appear in the public API (NewtonsMethod.h).
