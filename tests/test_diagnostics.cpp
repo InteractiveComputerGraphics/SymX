@@ -14,13 +14,13 @@ TEST_CASE("Compiler diagnostics", "[diagnostics]")
         // Should be available since tests are working
         REQUIRE(info.is_available == true);
         REQUIRE(!info.path.empty());
-        REQUIRE(!info.version.empty());
-        REQUIRE(!info.architecture.empty());
+        REQUIRE(info.could_compile);
+        REQUIRE(info.could_load);
+        REQUIRE(info.verified_result);
         
         std::cout << "Compiler validation successful:" << std::endl;
         std::cout << "  Path: " << info.path << std::endl;
-        std::cout << "  Version: " << info.version << std::endl;
-        std::cout << "  Architecture: " << info.architecture << std::endl;
+        std::cout << "  Compiled, loaded, and verified test program" << std::endl;
         std::cout << "  AVX Support: " << (info.supports_avx ? "YES" : "NO") << std::endl;
     }
     
@@ -30,10 +30,10 @@ TEST_CASE("Compiler diagnostics", "[diagnostics]")
         symx::CompilerInfo bad_info = symx::get_compiler_info("/nonexistent/compiler");
         
         REQUIRE(bad_info.is_available == false);
-        REQUIRE(!bad_info.error_message.empty());
+        REQUIRE(bad_info.path == "/nonexistent/compiler");
         
         std::cout << "Invalid compiler correctly detected:" << std::endl;
-        std::cout << "  Error: " << bad_info.error_message << std::endl;
+        symx::print_compiler_info(bad_info);
     }
     
     SECTION("Print diagnostics (visual test)")

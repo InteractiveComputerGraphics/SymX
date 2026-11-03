@@ -9,15 +9,19 @@ TEST_CASE("User-friendly compiler API", "[user_api]")
     SECTION("Easy compiler checking")
     {
         // Simple check if compiler is working
-        bool working = is_compiler_working();
+        CompilerInfo info = get_compiler_info(resolve_compiler_path());
+        REQUIRE(info.is_available);
+        REQUIRE(info.could_compile);
+        REQUIRE(info.could_load);
+        bool working = info.verified_result;
         REQUIRE(working == true);  // Should be true since tests are passing
         
         std::cout << "Compiler working: " << (working ? "YES" : "NO") << std::endl;
     }
     
-    SECTION("Get recommended compiler")
+    SECTION("Resolve compiler")
     {
-        std::string recommended = get_recommended_compiler();
+        std::string recommended = resolve_compiler_path();
         REQUIRE(!recommended.empty());
         
         std::cout << "Recommended compiler: " << recommended << std::endl;
@@ -26,11 +30,11 @@ TEST_CASE("User-friendly compiler API", "[user_api]")
     SECTION("Test specific compiler")
     {
         // Test the current compiler
-        CompilerInfo info = test_compiler(symx::resolve_compiler_path());
+        CompilerInfo info = get_compiler_info(symx::resolve_compiler_path());
         REQUIRE(info.is_available == true);
         
         // Test a bad compiler
-        CompilerInfo bad_info = test_compiler("nonexistent_compiler");
+        CompilerInfo bad_info = get_compiler_info("nonexistent_compiler");
         REQUIRE(bad_info.is_available == false);
         
         std::cout << "Current compiler test: " << (info.is_available ? "PASS" : "FAIL") << std::endl;
@@ -40,7 +44,7 @@ TEST_CASE("User-friendly compiler API", "[user_api]")
     SECTION("Comprehensive check (visual test)")
     {
         std::cout << "\n=== User-Friendly Compiler Check ===" << std::endl;
-        check_compiler_setup();
+        print_compiler_diagnostics();
         std::cout << "===================================" << std::endl;
     }
 }
