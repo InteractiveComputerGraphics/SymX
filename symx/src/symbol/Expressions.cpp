@@ -126,81 +126,97 @@ double Expressions::get_value(int32_t expr_id) const
 
 double Expressions::eval(int32_t expr_id) const
 {
+	// Memoize over the (append-only, topologically-ordered) graph so shared subexpressions
+	// are evaluated once. Without this, a shared DAG is walked as its exponentially-sized
+	// equivalent tree. The cache is per-call because symbol values change between calls.
+	std::vector<double> memo(expr_id + 1);
+	std::vector<uint8_t> done(expr_id + 1, 0);
+	return this->_eval_rec(expr_id, memo, done);
+}
+
+double Expressions::_eval_rec(int32_t expr_id, std::vector<double>& memo, std::vector<uint8_t>& done) const
+{
+	if (done[expr_id]) {
+		return memo[expr_id];
+	}
+
+	// Operands are always created before their parent, so every reachable node has a strictly
+	// smaller index and fits in `memo` (sized expr_id+1). Guard that invariant in debug builds.
+	auto rec = [&](int32_t child) -> double {
+		assert(child >= 0 && child < expr_id &&
+			"Expressions::_eval_rec: operand index must be < node index (broken graph ordering)");
+		return this->_eval_rec(child, memo, done);
+	};
+
 	const Expr& expr = this->expressions[expr_id];
+	double result;
 	switch (expr.type)
 	{
 	case ExprType::Zero:
-		return 0.0; break;
+		result = 0.0; break;
 	case ExprType::One:
-		return 1.0; break;
+		result = 1.0; break;
 	case ExprType::ConstantFloat:
-		return expr.unpack_double(); break;
+		result = expr.unpack_double(); break;
 	case ExprType::Symbol:
 		if (!this->symbol_values_set[expr.a]) {
 			std::cout << "symx error: Cannot evaluate an expression if all symbols are not set.\nMissing symbol [idx=" << expr.a << "]" << std::endl;
 		}
-		return this->symbol_values[expr.a]; break;
+		result = this->symbol_values[expr.a]; break;
 	case ExprType::Add:
-		return this->eval(expr.a) + this->eval(expr.b); break;
+		result = rec(expr.a) + rec(expr.b); break;
 	case ExprType::Sub:
-		return this->eval(expr.a) - this->eval(expr.b); break;
+		result = rec(expr.a) - rec(expr.b); break;
 	case ExprType::Mul:
-		return this->eval(expr.a) * this->eval(expr.b); break;
+		result = rec(expr.a) * rec(expr.b); break;
 	case ExprType::Reciprocal:
-		return 1.0 / this->eval(expr.a); break;
+		result = 1.0 / rec(expr.a); break;
 	case ExprType::PowN:
-		return std::pow(this->eval(expr.a), (int)expr.b); break;
+		result = std::pow(rec(expr.a), (int)expr.b); break;  // expr.b is the exponent, not an index
 	case ExprType::PowF:
-		return std::pow(this->eval(expr.a), this->eval(expr.b)); break;
+		result = std::pow(rec(expr.a), rec(expr.b)); break;
 	case ExprType::Sqrt:
-		return std::sqrt(this->eval(expr.a)); break;
+		result = std::sqrt(rec(expr.a)); break;
 	case ExprType::Ln:
 	{
-		double arg = this->eval(expr.a);
-		if (arg <= 0.0) {
-			return -std::numeric_limits<double>::infinity();
-		}
-		return std::log(arg);
+		double arg = rec(expr.a);
+		result = (arg <= 0.0) ? -std::numeric_limits<double>::infinity() : std::log(arg);
 	}
 	break;
 	case ExprType::Log10:
 	{
-		double arg = this->eval(expr.a);
-		if (arg <= 0.0) {
-			return -std::numeric_limits<double>::infinity();
-		}
-		return std::log10(arg);
+		double arg = rec(expr.a);
+		result = (arg <= 0.0) ? -std::numeric_limits<double>::infinity() : std::log10(arg);
 	}
 	break;
 	case ExprType::Exp:
-		return std::exp(this->eval(expr.a)); break;
+		result = std::exp(rec(expr.a)); break;
 	case ExprType::Sin:
-		return std::sin(this->eval(expr.a)); break;
+		result = std::sin(rec(expr.a)); break;
 	case ExprType::Cos:
-		return std::cos(this->eval(expr.a)); break;
+		result = std::cos(rec(expr.a)); break;
 	case ExprType::Tan:
-		return std::tan(this->eval(expr.a)); break;
+		result = std::tan(rec(expr.a)); break;
 	case ExprType::ArcSin:
-		return std::asin(this->eval(expr.a)); break;
+		result = std::asin(rec(expr.a)); break;
 	case ExprType::ArcCos:
-		return std::acos(this->eval(expr.a)); break;
+		result = std::acos(rec(expr.a)); break;
 	case ExprType::ArcTan:
-		return std::atan(this->eval(expr.a)); break;
+		result = std::atan(rec(expr.a)); break;
 
+	// Branch keeps lazy semantics: only the taken side is evaluated (and memoized).
 	case ExprType::Branch:
-		if (this->eval(expr.cond) > 0) {
-			return this->eval(expr.a);
-		}
-		else {
-			return this->eval(expr.b);
-		}
+		result = (rec(expr.cond) > 0) ? rec(expr.a) : rec(expr.b);
 		break;
 
 	default:
 		std::cout << "symx error: Unhandled ExprType in Expressions.eval()" << std::endl;
 		exit(-1);
-		break;
 	}
+
+	done[expr_id] = 1;
+	memo[expr_id] = result;
+	return result;
 }
 int64_t symx::Expressions::get_n_bytes() const
 {

@@ -9,6 +9,8 @@ namespace symx
 {
     class SecondOrderCompiledPotential
     {
+	public:
+		enum class FemKernel { None, Direct, Mapped };
 	private:
 		/* Definitions */
 		struct DoFInConn
@@ -26,14 +28,25 @@ namespace symx
         spCompiledCondition condition;            // Conditional
         int32_t n_dofs = -1;
         bool cached = false;
+        FemKernel fem_kernel = FemKernel::None;
 
+        
     public:
         /* Methods */
         SecondOrderCompiledPotential(const Potential& potential, const std::vector<DataMap<double>>& dofs, const std::string &compilation_directory, DeferredParallelTasks& tasks);
         bool was_cached() const;
+        FemKernel get_fem_kernel() const;
         spCompiledCondition get_condition() const;
         void evaluate_P(Assembly& assembly);
 		void evaluate_P__dP_du(Assembly& assembly);
 		void evaluate_P__dP_du__local_d2P_du2(Assembly& assembly);
+        
+    private:
+        /* Methods */
+		void _initialize_standard(const Potential& potential, const std::vector<Scalar>& dofs,
+			const std::string& compilation_directory, DeferredParallelTasks& tasks);
+		void _initialize_factorized(const Potential& potential, const std::vector<Scalar>& dofs,
+			const std::string& compilation_directory, DeferredParallelTasks& tasks);
+
     };
 } // namespace symx

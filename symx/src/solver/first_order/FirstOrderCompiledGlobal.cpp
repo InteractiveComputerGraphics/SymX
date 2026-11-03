@@ -78,3 +78,37 @@ void FirstOrderCompiledGlobal::evaluate_P__dP_du(double& out_P, Eigen::VectorXd&
 	out_P = this->assembly.E.result();
 	out_dP_du = this->assembly.grad.result();
 }
+
+
+std::unordered_map<std::string, double> FirstOrderCompiledGlobal::evaluate_P_components()
+{
+    auto timer = this->context->logger->time("evaluate_P_components");
+    const auto& potentials = this->global_potential->get_potentials();
+    std::unordered_map<std::string, double> values;
+    values.reserve(this->compiled_potentials.size());
+    for (size_t i = 0; i < this->compiled_potentials.size(); ++i) {
+        this->assembly.start(this->global_potential->get_dofs_offsets(), this->context->n_threads, false, false);
+        this->compiled_potentials[i]->evaluate_P(this->assembly);
+        this->assembly.stop(false, false);
+        values.emplace(potentials[i]->get_name(), this->assembly.E.result());
+    }
+    return values;
+}
+
+PotentialComponents FirstOrderCompiledGlobal::evaluate_P__dP_du_components()
+{
+    auto timer = this->context->logger->time("evaluate_P_grad_components");
+    const auto& potentials = this->global_potential->get_potentials();
+    PotentialComponents values;
+    values.energies.reserve(this->compiled_potentials.size());
+    values.gradients.reserve(this->compiled_potentials.size());
+    for (size_t i = 0; i < this->compiled_potentials.size(); ++i) {
+        this->assembly.start(this->global_potential->get_dofs_offsets(), this->context->n_threads, false, true);
+        this->compiled_potentials[i]->evaluate_P__dP_du(this->assembly);
+        this->assembly.stop(false, true);
+        const auto& name = potentials[i]->get_name();
+        values.energies.emplace(name, this->assembly.E.result());
+        values.gradients.emplace(name, this->assembly.grad.result());
+    }
+    return values;
+}

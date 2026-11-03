@@ -2,13 +2,52 @@
 
 #include "../../symbol/diff.h"
 #include "project_to_PD.h"
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace symx;
+
+namespace
+{
+    // Inspect only expressions supplied by the FEM split; the workspace graph also contains
+    // unrelated expressions and the temporary independent F symbols.
+    std::vector<int32_t> referenced_state_nodes(
+        const Scalar& scalar, const std::unordered_map<int32_t, int32_t>& state_nodes)
+    {
+        const auto& graph = scalar.get_expression_graph()->get_expressions();
+        std::vector<int32_t> stack{scalar.expr_id};
+        std::unordered_set<int32_t> seen;
+        std::vector<int32_t> nodes;
+        while (!stack.empty()) {
+            const int32_t id = stack.back();
+            stack.pop_back();
+            if (!seen.insert(id).second) { continue; }
+            const Expr& expr = graph[id];
+            if (expr.type == ExprType::Symbol) {
+                const auto it = state_nodes.find(expr.a);
+                if (it != state_nodes.end()) { nodes.push_back(it->second); }
+            }
+            else if (expr.type == ExprType::Branch) {
+                stack.push_back(expr.cond);
+                stack.push_back(expr.a);
+                stack.push_back(expr.b);
+            }
+            else if (expr.is_operation()) {
+                stack.push_back(expr.a);
+                if (expr.type == ExprType::Add || expr.type == ExprType::Sub ||
+                    expr.type == ExprType::Mul || expr.type == ExprType::PowF) {
+                    stack.push_back(expr.b);
+                }
+            }
+        }
+        return nodes;
+    }
+}
 
 SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential &potential, const std::vector<DataMap<double>> &dofs_maps, const std::string &compilation_directory, DeferredParallelTasks& tasks)
     : mws(potential.get_mws())
 {
-    // Identity DoF scalars (mws->get_symbols_and_indices() hardcoded to stride 3)
+    // Shared setup: collect local DoF symbols and their connectivity indices.
     std::vector<Scalar> dofs;
     for (int dof_set = 0; dof_set < (int)dofs_maps.size(); dof_set++) {
         const std::vector<DataMap<const double>> original_maps = this->mws->get_original_maps(dofs_maps[dof_set]);  // Get local array maps that are global DoFs
@@ -44,44 +83,190 @@ SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential &pote
         exit(-1);
     }
 
-    // Compute checksum
-    std::string pre_hash = potential.get_name();
-    for (const Scalar& dof : dofs) {
-        pre_hash += std::to_string(dof.get_symbol_idx());
+    // Keep the standard SymX path independent from the specialized FEM path.
+    if (potential.is_factorized()) {
+        this->_initialize_factorized(potential, dofs, compilation_directory, tasks);
     }
-    std::string checksum = potential.get_checksum(pre_hash);
-    if (potential.has_conditional()) {
-        checksum += potential.get_condition().get_checksum();
+    else {
+        this->_initialize_standard(potential, dofs, compilation_directory, tasks);
     }
+}
 
-    // Condition
-    this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks);
-    
-    // Try to load
+void SecondOrderCompiledPotential::_initialize_standard(const Potential& potential, const std::vector<Scalar>& dofs,
+    const std::string& compilation_directory, DeferredParallelTasks& tasks)
+{
+    // Standard path: checksum and load first; differentiate and queue compilation on a miss.
+    const Scalar v = potential.get_expression();
+    std::string pre_hash = potential.get_name();
+    for (const Scalar& dof : dofs) { pre_hash += std::to_string(dof.get_symbol_idx()); }
+    std::string checksum = potential.get_checksum(pre_hash);
+    if (potential.has_conditional()) { checksum += potential.get_condition().get_checksum(); }
     const std::string name = potential.get_name();
+    this->condition = std::make_shared<CompiledCondition>(
+        potential, checksum, compilation_directory, tasks);
+
     this->cached = this->P.load_if_cached(this->mws, name + "_P", compilation_directory, checksum);
     this->cached &= this->P__dP_du.load_if_cached(this->mws, name + "_P__dP_du", compilation_directory, checksum);
     this->cached &= this->P__dP_du__d2P_du2.load_if_cached(this->mws, name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
     this->cached &= this->condition->was_cached();
 
-    // If not cached, compile
     if (!this->cached) {
-
-        // Differentiation
-        const Scalar v = potential.get_expression();
+        tasks.add([this, v, name, compilation_directory, checksum]() {
+            this->P.compile(this->mws, {v}, name + "_P", compilation_directory, checksum);
+        });
         DiffCache diff_cache;
         const Vector g = gradient(v, dofs, diff_cache);
         const Matrix h = gradient(g, dofs, /*symmetric=*/true, diff_cache);
-
-        // Defer compilation tasks
-        tasks.add([this, v, name, compilation_directory, checksum]() {
-            this->P.compile(this->mws, { v }, name + "_P", compilation_directory, checksum);
-        });
         tasks.add([this, v, g_vals = g.values(), name, compilation_directory, checksum]() {
-            this->P__dP_du.compile(this->mws, collect_scalars({{ v }, g_vals}), name + "_P__dP_du", compilation_directory, checksum);
+            this->P__dP_du.compile(this->mws, collect_scalars({{v}, g_vals}),
+                name + "_P__dP_du", compilation_directory, checksum);
         });
         tasks.add([this, v, g_vals = g.values(), h_vals = h.values(), name, compilation_directory, checksum]() {
-            this->P__dP_du__d2P_du2.compile(this->mws, collect_scalars({{ v }, g_vals, h_vals}), name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
+            this->P__dP_du__d2P_du2.compile(this->mws, collect_scalars({{v}, g_vals, h_vals}),
+                name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
+        });
+    }
+}
+
+void SecondOrderCompiledPotential::_initialize_factorized(const Potential& potential, const std::vector<Scalar>& dofs,
+    const std::string& compilation_directory, DeferredParallelTasks& tasks)
+{
+    // Validate the split and node-local map before selecting a cache entry.
+    const FactorizationData& fac = potential.get_factorization();
+    const int n_nodes = fac.B.rows();
+    const int d_ref = fac.B.cols();
+    if (n_nodes <= 0 || d_ref <= 0 || fac.x.rows() != n_nodes || fac.x.cols() != 3 ||
+        n_nodes * 3 != this->n_dofs || fac.P_dof_w.size() != 3 * d_ref ||
+        fac.A_dof_w.rows() != fac.P_dof_w.size() || fac.A_dof_w.cols() != fac.P_dof_w.size()) {
+        std::cout << "symx error: factorized potential '" << potential.get_name()
+                  << "' has inconsistent local dimensions." << std::endl;
+        exit(-1);
+    }
+
+    std::unordered_map<int32_t, int32_t> state_nodes;
+    for (int i = 0; i < this->n_dofs; i++) {
+        if (!state_nodes.emplace(dofs[i].get_symbol_idx(), i / 3).second) {
+            std::cout << "symx error: factorized potential has repeated local DoF symbols." << std::endl;
+            exit(-1);
+        }
+    }
+    for (const Scalar& b : fac.B.values()) {
+        if (!referenced_state_nodes(b, state_nodes).empty()) {
+            std::cout << "symx error: factorized potential B depends on state DoFs." << std::endl;
+            exit(-1);
+        }
+    }
+    if (!referenced_state_nodes(fac.material_unsubstituted, state_nodes).empty()) {
+        std::cout << "symx error: factorized material depends on state DoFs outside F." << std::endl;
+        exit(-1);
+    }
+
+    DiffCache map_cache;
+    std::vector<Scalar> jacobian_values;
+    jacobian_values.reserve(n_nodes * 9);
+    bool identity = true;
+    for (int l = 0; l < n_nodes; l++) {
+        for (int a = 0; a < 3; a++) {
+            const Scalar& x = fac.x(l, a);
+            for (int state_node : referenced_state_nodes(x, state_nodes)) {
+                if (state_node != l) {
+                    std::cout << "symx error: factorized node map depends on another node's DoFs." << std::endl;
+                    exit(-1);
+                }
+            }
+            for (int i = 0; i < 3; i++) {
+                const Scalar deriv = diff(x, dofs[3 * l + i], map_cache);
+                identity &= (a == i) ? deriv.is_one() : deriv.is_zero();
+                jacobian_values.push_back(deriv);
+            }
+        }
+    }
+    this->fem_kernel = identity ? FemKernel::Direct : FemKernel::Mapped;
+
+    // Include the selected kernel in the checksum while keeping artifact names user-readable.
+    const std::string algorithm_tag = identity ? "_fem_direct" : "_fem_mapped";
+    std::string pre_hash = potential.get_name() + algorithm_tag;
+    for (const Scalar& dof : dofs) { pre_hash += std::to_string(dof.get_symbol_idx()); }
+    std::string checksum = potential.get_checksum(pre_hash);
+    if (potential.has_conditional()) { checksum += potential.get_condition().get_checksum(); }
+    const Scalar v = potential.get_expression();
+    const std::string name = potential.get_name();
+    this->condition = std::make_shared<CompiledCondition>(potential, checksum, compilation_directory, tasks);
+
+    this->cached = this->P.load_if_cached(this->mws, name + "_P", compilation_directory, checksum);
+    this->cached &= this->P__dP_du.load_if_cached(this->mws, name + "_P__dP_du", compilation_directory, checksum);
+    this->cached &= this->P__dP_du__d2P_du2.load_if_cached(this->mws, name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
+    this->cached &= this->condition->was_cached();
+    if (this->cached) { return; }
+
+    // Cache miss: build the compact gradient and, for mapped FEM, geometric stiffness.
+    std::vector<Scalar> compact_gradient;
+    std::vector<Scalar> map_hessian_values;
+    if (identity) {
+        compact_gradient.reserve(n_nodes * 3);
+        for (int l = 0; l < n_nodes; l++) {
+            for (int a = 0; a < 3; a++) {
+                Scalar acc = fac.B(l, 0) * fac.P_dof_w[d_ref * a];
+                for (int b = 1; b < d_ref; b++) {
+                    acc = acc + fac.B(l, b) * fac.P_dof_w[d_ref * a + b];
+                }
+                compact_gradient.push_back(acc);
+            }
+        }
+    }
+    else {
+        compact_gradient.reserve(n_nodes * 3);
+        map_hessian_values.reserve(n_nodes * 27);
+        for (int l = 0; l < n_nodes; l++) {
+            Scalar q[3] = {
+                fac.B(l, 0) * fac.P_dof_w[0],
+                fac.B(l, 0) * fac.P_dof_w[d_ref],
+                fac.B(l, 0) * fac.P_dof_w[2 * d_ref]
+            };
+            for (int a = 0; a < 3; a++) {
+                for (int b = 1; b < d_ref; b++) {
+                    q[a] = q[a] + fac.B(l, b) * fac.P_dof_w[d_ref * a + b];
+                }
+            }
+            for (int a = 0; a < 3; a++) {
+                for (int i = 0; i < 3; i++) {
+                    for (int ip = 0; ip < 3; ip++) {
+                        map_hessian_values.push_back(diff(jacobian_values[l * 9 + a * 3 + i], dofs[3 * l + ip], map_cache));
+                    }
+                }
+            }
+            for (int i = 0; i < 3; i++) {
+                Scalar acc = jacobian_values[l * 9 + i] * q[0];
+                for (int a = 1; a < 3; a++) {
+                    acc = acc + jacobian_values[l * 9 + a * 3 + i] * q[a];
+                }
+                compact_gradient.push_back(acc);
+            }
+        }
+    }
+
+    // Preserve independent compilation tasks and capture all symbolic inputs by value.
+    tasks.add([this, v, name, compilation_directory, checksum]() {
+        this->P.compile(this->mws, {v}, name + "_P", compilation_directory, checksum);
+    });
+    tasks.add([this, v, compact_gradient, name, compilation_directory, checksum]() {
+        this->P__dP_du.compile(this->mws, collect_scalars({{v}, compact_gradient}),
+            name + "_P__dP_du", compilation_directory, checksum);
+    });
+    if (identity) {
+        tasks.add([this, energy = v, P = fac.P_dof_w, A = fac.A_dof_w, B = fac.B,
+            name, compilation_directory, checksum]() {
+            this->P__dP_du__d2P_du2.compile_factorized(this->mws, energy, P, A, B,
+                name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
+        });
+    }
+    else {
+        Matrix J(jacobian_values, {3 * n_nodes, 3});
+        Matrix Hgeo(map_hessian_values, {9 * n_nodes, 3});
+        tasks.add([this, energy = v, P = fac.P_dof_w, A = fac.A_dof_w, B = fac.B, J, Hgeo,
+            name, compilation_directory, checksum]() {
+            this->P__dP_du__d2P_du2.compile_factorized_mapped(this->mws, energy, P, A, B, J, Hgeo,
+                name + "_P__dP_du__d2P_du2", compilation_directory, checksum);
         });
     }
 }
@@ -89,6 +274,11 @@ SecondOrderCompiledPotential::SecondOrderCompiledPotential(const Potential &pote
 bool SecondOrderCompiledPotential::was_cached() const
 {
     return this->cached;
+}
+
+SecondOrderCompiledPotential::FemKernel SecondOrderCompiledPotential::get_fem_kernel() const
+{
+    return this->fem_kernel;
 }
 
 spCompiledCondition SecondOrderCompiledPotential::get_condition() const

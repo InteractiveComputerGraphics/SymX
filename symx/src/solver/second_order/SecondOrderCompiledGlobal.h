@@ -2,6 +2,7 @@
 #include "SecondOrderCompiledPotential.h"
 #include "../GlobalPotential.h"
 #include "../Context.h"
+#include "../solver_types.h"
 #include "Assembly.h"
 
 #include "../Logger.h"
@@ -26,6 +27,9 @@ namespace symx
         // Evaluation
         void evaluate_P(double& out_P);
         void evaluate_P__dP_du(double& out_P, Eigen::VectorXd& out_dP_du);
+        // Evaluate each registered potential separately, keyed by its unique name.
+        std::unordered_map<std::string, double> evaluate_P_components();
+        PotentialComponents evaluate_P__dP_du_components();
         spElementHessians evaluate_P__dP_du__local_d2P_du2(double& out_P, Eigen::VectorXd& out_dP_du);
         std::vector<spCompiledCondition> get_conditions() const;
         double test_derivatives_with_FD(const double h);

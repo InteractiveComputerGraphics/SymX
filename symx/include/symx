@@ -4,6 +4,7 @@
 #include "../src/symbol/Vector.h"
 #include "../src/symbol/Matrix.h"
 #include "../src/symbol/diff.h"
+#include "../src/symbol/substitute.h"
 #include "../src/symbol/utils.h"
 
 #include "../src/compile/Compilation.h"

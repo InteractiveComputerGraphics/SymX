@@ -23,8 +23,9 @@ void NeoHookean_assembly_microbenchmark(int size, int n_threads);
 void NeoHookean_assembly_comparison();
 
 // rubber_extrusion.cpp
-void rubber_extrusion(symx::FEM_Element fem_element_type, int refinement_level, double poissons_ratio, double extrusion_factor);
-void rubber_extrusion_comparison(int refinement_level = 10, double poissons_ratio = 0.49, double extrusion_factor = 5.0);
+enum class RubberExtrusionMode { StandardFixedSummation, StandardIndexedSummation, FactorizedFEM };
+void rubber_extrusion(symx::FEM_Element fem_element_type, RubberExtrusionMode mode, int refinement_level, double poissons_ratio, double extrusion_factor);
+void rubber_extrusion_comparison(RubberExtrusionMode mode = RubberExtrusionMode::FactorizedFEM, int refinement_level = 10, double poissons_ratio = 0.49, double extrusion_factor = 5.0);
 
 // dynamic_elasticity_with_contact.cpp
 void dynamic_elasticity_with_contact();

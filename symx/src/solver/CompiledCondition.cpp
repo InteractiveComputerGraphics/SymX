@@ -1,13 +1,18 @@
 #include "CompiledCondition.h"
 
 symx::CompiledCondition::CompiledCondition(const Potential &potential, const std::string& checksum, const std::string &compilation_directory, DeferredParallelTasks &tasks)
+    : CompiledCondition(potential, checksum, compilation_directory, tasks, "")
+{
+}
+
+symx::CompiledCondition::CompiledCondition(const Potential &potential, const std::string& checksum, const std::string &compilation_directory, DeferredParallelTasks &tasks, const std::string& artifact_suffix)
     : mws(potential.get_mws())
 {
     this->_has_condition = potential.has_conditional();
 
     if (this->_has_condition) {
         // Try to load
-        const std::string name = potential.get_name();
+        const std::string name = potential.get_name() + artifact_suffix;
         this->cached = this->C.load_if_cached(this->mws, name + "_C", compilation_directory, checksum);
 
         // If not cached, compile

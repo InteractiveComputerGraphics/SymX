@@ -69,6 +69,12 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 	double t1 = omp_get_wtime();
 	this->runtime_codegen = t1 - t0;
 
+	const int n_bytes = (int)(expr[0].get_expression_graph()->size() * sizeof(Expr));
+	this->_invoke_compiler_and_load(name, folder, id, float_type, n_bytes);
+}
+
+void symx::Compilation::_invoke_compiler_and_load(const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type, int n_bytes_symbols)
+{
 	int err = -1;
 	std::string command;
 	std::string compiler_path = symx::resolve_compiler_path();
@@ -84,9 +90,9 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 #else
 	const std::string enable_output = (get_suppress_compiler_output()) ? " > /dev/null 2>&1 " : "";
 	command += "cd \"" + folder + "\"";
-	command += " ; " + compiler_path + " " + name + ".cpp -shared -O3 -march=native -o " + name + ".so" + enable_output;  // Note: fast-math is not used because it can change the expected results (e.g. sqrt(pow(x, 2)) < 0)
+	command += " ; " + compiler_path + " " + name + ".cpp -shared -O3 -march=native -fopenmp-simd -o " + name + ".so" + enable_output;  // Note: fast-math is not used because it can change the expected results (e.g. sqrt(pow(x, 2)) < 0)
 #endif
-	t0 = omp_get_wtime();
+	const double t0 = omp_get_wtime();
 	err = system(command.c_str());
 
 	// When compiling multiple units in parallel, a transient failure may occur.
@@ -94,7 +100,7 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 	if (err != 0) {
 		err = system(command.c_str());
 	}
-	t1 = omp_get_wtime();
+	const double t1 = omp_get_wtime();
 	this->runtime_compilation = t1 - t0;
 
 	if (err != 0) {
@@ -109,11 +115,11 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 	}
 
 	// Memory
-	this->n_bytes_symbols = expr[0].get_expression_graph()->size() * sizeof(Expr);
+	this->n_bytes_symbols = n_bytes_symbols;
 
 	// Check if it can be loaded
-	this->override_load = true; // Force load the compiled function
-	bool success = this->load_if_cached(name, folder, id, float_type);
+	this->override_load = true; // Force load the freshly compiled function
+	bool success = this->load_if_cached(name, folder, cache_id, float_type);
 	this->override_load = false;
 	this->cached = false;
 
@@ -124,6 +130,79 @@ void symx::Compilation::compile(const std::vector<Scalar>& expr, const std::stri
 		std::cout << "Run symx::validate_auto_search_compiler_paths() for more info." << std::endl;
 		exit(-1);
 	}
+}
+
+// Direct FEM form: P = dPsi/dF, A = d2Psi/dF2, and B is nodes x reference features.
+// Infer dimensions here, then flatten in the Sequence's established output order.
+void symx::Compilation::compile_factorized(const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type)
+{
+	if (float_type != FloatType::Double && float_type != FloatType::Float) {
+		std::cout << "symx error: compile_factorized() only supports scalar (double/float) kernels, not SIMD." << std::endl;
+		exit(-1);
+	}
+	if (B.rows() <= 0 || B.cols() <= 0 || P.size() <= 0 || P.size() % B.cols() != 0 ||
+		A.rows() != P.size() || A.cols() != P.size()) {
+		std::cout << "symx error: compile_factorized() received inconsistent symbolic dimensions: "
+			<< "P=" << P.size() << ", A=" << A.rows() << "x" << A.cols()
+			<< ", B=" << B.rows() << "x" << B.cols() << "." << std::endl;
+		exit(-1);
+	}
+	const int d_ref = B.cols();
+	const int d_cur = P.size() / d_ref;
+	const int n_nodes = B.rows();
+	const std::vector<Scalar> ingredients = collect_scalars({{energy}, P.values(), A.values(), B.values()});
+
+	std::string id = cache_id;
+	if (id == "") {
+		id = get_checksum(ingredients);
+	}
+
+	const double t0 = omp_get_wtime();
+	symx::Sequence seq(ingredients);
+	this->_write_factorized_kernel(seq, d_cur, d_ref, n_nodes, name, folder, id, float_type);
+	const double t1 = omp_get_wtime();
+	this->runtime_codegen = t1 - t0;
+
+	const int n_bytes = (int)(energy.get_expression_graph()->size() * sizeof(Expr));
+	this->_invoke_compiler_and_load(name, folder, id, float_type, n_bytes);
+}
+
+// Mapped 3D form adds stacked node Jacobians (3*n_nodes x 3) and map Hessians (9*n_nodes x 3).
+void symx::Compilation::compile_factorized_mapped(const Scalar& energy, const Vector& P, const Matrix& A, const Matrix& B, const Matrix& J, const Matrix& Hgeo, const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type)
+{
+	if (float_type != FloatType::Double && float_type != FloatType::Float) {
+		std::cout << "symx error: compile_factorized_mapped() only supports scalar (double/float) kernels, not SIMD." << std::endl;
+		exit(-1);
+	}
+	const int d_ref = B.cols();
+	const int n_nodes = B.rows();
+	if (n_nodes <= 0 || d_ref <= 0 || P.size() != 3 * d_ref ||
+		A.rows() != P.size() || A.cols() != P.size() ||
+		J.rows() != 3 * n_nodes || J.cols() != 3 ||
+		Hgeo.rows() != 9 * n_nodes || Hgeo.cols() != 3) {
+		std::cout << "symx error: compile_factorized_mapped() received inconsistent symbolic dimensions: "
+			<< "P=" << P.size() << ", A=" << A.rows() << "x" << A.cols()
+			<< ", B=" << B.rows() << "x" << B.cols()
+			<< ", J=" << J.rows() << "x" << J.cols()
+			<< ", Hgeo=" << Hgeo.rows() << "x" << Hgeo.cols() << "." << std::endl;
+		exit(-1);
+	}
+	const std::vector<Scalar> ingredients = collect_scalars(
+		{{energy}, P.values(), A.values(), B.values(), J.values(), Hgeo.values()});
+
+	std::string id = cache_id;
+	if (id == "") {
+		id = get_checksum(ingredients);
+	}
+
+	const double t0 = omp_get_wtime();
+	symx::Sequence seq(ingredients);
+	this->_write_factorized_kernel_mapped(seq, d_ref, n_nodes, name, folder, id, float_type);
+	const double t1 = omp_get_wtime();
+	this->runtime_codegen = t1 - t0;
+
+	const int n_bytes = (int)(energy.get_expression_graph()->size() * sizeof(Expr));
+	this->_invoke_compiler_and_load(name, folder, id, float_type, n_bytes);
 }
 bool symx::Compilation::load_if_cached(const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type)
 {
@@ -273,11 +352,14 @@ void symx::Compilation::_write_shared_object_code(Sequence& seq, const std::stri
 	code += "\n";
 
 	// Extern for MSVC
-	code += "#if _MSC_VER\n";
+	code += "#if defined(_MSC_VER)\n";
 	code += "#define EXPORT __declspec(dllexport)\n";
 	code += "#else\n";
 	code += "#define EXPORT\n";
 	code += "#endif\n";
+	code += "#if defined(_MSC_VER)\n#define SYMX_RESTRICT __restrict\n";
+	code += "#elif defined(__GNUC__) || defined(__clang__)\n#define SYMX_RESTRICT __restrict__\n";
+	code += "#else\n#define SYMX_RESTRICT\n#endif\n";
 	code += "\n";
 
 
@@ -305,7 +387,7 @@ void symx::Compilation::_write_shared_object_code(Sequence& seq, const std::stri
 
 	// Function
 	code += "EXPORT\n";
-	code += "void " + name + "(" + type + "* in, " + type + "* out)\n";
+	code += "void " + name + "(" + type + "* SYMX_RESTRICT in, " + type + "* SYMX_RESTRICT out)\n";
 	code += "{\n";
 	code += "\t/*\n";
 	code += seq.count_ops_string("\t\t");
@@ -315,7 +397,8 @@ void symx::Compilation::_write_shared_object_code(Sequence& seq, const std::stri
 		this->_add_instructions_simd(code, seq, type);
 	}
 	else {
-		this->_add_instructions_scalar(code, seq, type);
+		this->_add_instructions_scalar(code, seq, type,
+			[](int dst) { return "out[" + std::to_string(dst) + "]"; });
 	}
 	code += "}\n\n";
 
@@ -334,6 +417,261 @@ void symx::Compilation::_write_shared_object_code(Sequence& seq, const std::stri
 	outfile << code;
 	outfile.close();
 }
+
+// d_cur: current/spatial dimension (F rows, dof components per node). d_ref: reference/parametric
+// dimension (F cols, B cols, contraction length). For volume elements d_cur == d_ref == 3; for a
+// surface/membrane d_cur == 3, d_ref == 2; etc.
+void symx::Compilation::_write_factorized_kernel(Sequence& seq, int d_cur, int d_ref, int n_nodes, const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type)
+{
+	const std::string type = get_float_type_as_string(float_type);
+	const int dF = d_cur * d_ref;     // number of F components
+	const int nA = dF * dF;           // A is dF x dF
+	const int nB = n_nodes * d_ref;   // B is n_nodes x d_ref
+	const int n_dofs = d_cur * n_nodes;
+	const int n_outputs_packed = 1 + n_dofs + n_dofs * n_dofs;
+
+	// The fused ingredient list must be [ energy(1) | P(dF) | A(dF*dF) | B(n_nodes*d_ref) ].
+	if (seq.get_n_outputs() != 1 + dF + nA + nB) {
+		std::cout << "symx error: _write_factorized_kernel got " << seq.get_n_outputs()
+			<< " ingredients, expected " << (1 + dF + nA + nB)
+			<< " (1 + dF + dF^2 + n_nodes*d_ref for d_cur=" << d_cur << ", d_ref=" << d_ref
+			<< ", n_nodes=" << n_nodes << ")." << std::endl;
+		exit(-1);
+	}
+
+	// Checksum (mirror _write_shared_object_code)
+	std::string sha256_checksum;
+	if (cache_id == "") {
+		sha256_checksum = std::string(64, '0');
+	}
+	else {
+		const std::string id = cache_id + std::to_string(static_cast<int>(float_type));
+		std::vector<unsigned char> hash(picosha2::k_digest_size);
+		picosha2::hash256(id.begin(), id.end(), hash.begin(), hash.end());
+		sha256_checksum = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+	}
+
+	std::string code;
+	code += "#include <cmath>\n#include <cstdio>\n#include <limits>\n\n";
+	code += "#if defined(_MSC_VER)\n#define EXPORT __declspec(dllexport)\n#else\n#define EXPORT\n#endif\n";
+	code += "#if defined(_MSC_VER)\n#define SYMX_RESTRICT __restrict\n#elif defined(__GNUC__) || defined(__clang__)\n#define SYMX_RESTRICT __restrict__\n#else\n#define SYMX_RESTRICT\n#endif\n\n";
+	code += "extern \"C\"\n{\n\n";
+	code += "EXPORT\nint get_n_inputs() { return " + std::to_string(seq.get_n_inputs()) + "; }\n\n";
+	code += "EXPORT\nint get_n_outputs() { return " + std::to_string(n_outputs_packed) + "; }\n\n";
+	code += "EXPORT\nint get_float_type() { return " + std::to_string(static_cast<int>(float_type)) + "; }\n\n";
+	code += "EXPORT\nvoid get_sha256(char* str) {\n\tchar id[] = \"" + sha256_checksum + "\";\n\tfor(int i = 0; i < 64; i++) {\n\t\tstr[i] = id[i];\n\t}\n}\n\n";
+
+	// Restrict lets the compiler assume in/out (and hence the unit-stride stores below) do not
+	// alias, which is required to auto-vectorize the contraction loops.
+	code += "EXPORT\nvoid " + name + "(" + type + "* SYMX_RESTRICT in, " + type + "* SYMX_RESTRICT out)\n{\n";
+	code += "\t/*\n";
+	code += seq.count_ops_string("\t\t");
+	code += "\t\t(Not counting matrix product ops: G^T P and G^T A G)\n";
+	code += "\t*/\n";
+
+	// Local arrays for the symbolic ingredients. Zero-initialized so any entry left unwritten by
+	// a conditional branch in the material model defaults to 0 rather than garbage. 64-byte aligned
+	// so the vectorizer can use aligned loads/stores on the unit-stride (col) dimension.
+	code += "\talignas(64) " + type + " Ploc[" + std::to_string(dF) + "] = {};\n";
+	code += "\talignas(64) " + type + " Aloc[" + std::to_string(nA) + "] = {};\n";
+	code += "\talignas(64) " + type + " Bloc[" + std::to_string(nB) + "] = {};\n";
+	code += "\talignas(64) " + type + " Wloc[" + std::to_string(dF * n_dofs) + "] = {};\n";
+
+	// Emit the SSA once, routing the fused outputs into out[0] (energy) and the local arrays.
+	auto out_lvalue = [dF, nA](int dst) -> std::string {
+		if (dst == 0) return "out[0]";
+		int k = dst - 1;
+		if (k < dF) return "Ploc[" + std::to_string(k) + "]";
+		k -= dF;
+		if (k < nA) return "Aloc[" + std::to_string(k) + "]";
+		k -= nA;
+		return "Bloc[" + std::to_string(k) + "]";
+	};
+	this->_add_instructions_scalar(code, seq, type, out_lvalue);
+
+	// Hand-written contraction: g = G^T P, H = G^T A G, exploiting the compact geometric gradient B
+	// and the Kronecker structure G[d_ref*a+b, d_cur*l+i] = delta(a,i) * B[l,b] (a,i in [0,d_cur),
+	// b in [0,d_ref)). F is flattened row-major p = d_ref*a+b; the Hessian is written row-major into
+	// out[1 + n_dofs ...]. (Integration weights are already folded into A/P via the material density.)
+	const std::string DC = std::to_string(d_cur);
+	const std::string DR = std::to_string(d_ref);
+	const std::string N = std::to_string(n_nodes);
+	const std::string ND = std::to_string(n_dofs);
+	const std::string DF = std::to_string(dF);
+
+	// Gradient: out[1 + d_cur*l+i] = sum_b B[l,b] * P[d_ref*i + b]
+	code += "\tfor (int l = 0; l < " + N + "; l++) for (int i = 0; i < " + DC + "; i++) {\n";
+	code += "\t\t" + type + " acc = 0;\n";
+	code += "\t\tfor (int b = 0; b < " + DR + "; b++) acc += Bloc[l*" + DR + "+b] * Ploc[" + DR + "*i+b];\n";
+	code += "\t\tout[1 + " + DC + "*l+i] = acc;\n";
+	code += "\t}\n";
+
+	// Stage 1: W[p, col] = sum_e A[p, d_ref*i+e] * B[l,e], col = d_cur*l+i. Loop order p -> (l,i) so
+	// the store Wloc[p*ND + col] is unit-stride in col (the RHS still needs l,i, so they stay explicit).
+	code += "\tfor (int p = 0; p < " + DF + "; p++) {\n";
+	code += "\t\tfor (int l = 0; l < " + N + "; l++) for (int i = 0; i < " + DC + "; i++) {\n";
+	code += "\t\t\t" + type + " acc = 0;\n";
+	code += "\t\t\tfor (int e = 0; e < " + DR + "; e++) acc += Aloc[p*" + DF + " + " + DR + "*i+e] * Bloc[l*" + DR + "+e];\n";
+	code += "\t\t\tWloc[p*" + ND + " + " + DC + "*l+i] = acc;\n";
+	code += "\t\t}\n";
+	code += "\t}\n";
+
+	// Stage 2: out_row[col] = sum_c B[kk,c] * W[d_ref*j+c, col] for row r = d_cur*kk+j. The inner loop
+	// over col (= d_cur*l+i, but treated as a single 0..ND index) is unit-stride in both the W reads
+	// and the out store, with B[kk,c] a broadcast scalar -> cleanly auto-vectorizable across col.
+	code += "\tfor (int kk = 0; kk < " + N + "; kk++) for (int j = 0; j < " + DC + "; j++) {\n";
+	code += "\t\t" + type + "* SYMX_RESTRICT out_row = out + 1 + " + ND + " + (" + DC + "*kk+j)*" + ND + ";\n";
+	code += "\t\t#pragma omp simd\n";
+	code += "\t\tfor (int col = 0; col < " + ND + "; col++) {\n";
+	code += "\t\t\t" + type + " acc = 0;\n";
+	code += "\t\t\tfor (int c = 0; c < " + DR + "; c++) acc += Bloc[kk*" + DR + "+c] * Wloc[(" + DR + "*j+c)*" + ND + " + col];\n";
+	code += "\t\t\tout_row[col] = acc;\n";
+	code += "\t\t}\n";
+	code += "\t}\n";
+
+	code += "}\n\n} // extern \"C\"\n";
+
+	std::filesystem::create_directories(folder);
+	std::ofstream outfile(folder + "/" + name + ".cpp");
+	if (!outfile) {
+		std::cout << "symx error: Cannot open the file " + folder + "/" + name + ".cpp" << std::endl;
+		exit(-1);
+	}
+	outfile << code;
+	outfile.close();
+}
+
+// Mapped variant (3-per-node map x_l = f_l(y_l), d_cur = 3). Generalizes the standard kernel by
+// replacing the Kronecker delta(a,i) with the per-node Jacobian J_l = dx_l/dy_l, and adds the
+// node-diagonal geometric stiffness K_l = sum_a q_{l,a} d^2 x_{l,a}/dy_l^2 (q = the x-space force).
+// Reduces to _write_factorized_kernel when J_l = I and Hgeo = 0.
+void symx::Compilation::_write_factorized_kernel_mapped(Sequence& seq, int d_ref, int n_nodes, const std::string& name, const std::string& folder, const std::string& cache_id, FloatType float_type)
+{
+	const std::string type = get_float_type_as_string(float_type);
+	const int d_cur = 3;
+	const int dF = d_cur * d_ref;       // F components
+	const int nA = dF * dF;
+	const int nB = n_nodes * d_ref;
+	const int nJ = n_nodes * 9;         // per-node 3x3 Jacobian
+	const int nHg = n_nodes * 27;       // per-node 3x3x3 map Hessian
+	const int n_dofs = d_cur * n_nodes;
+	const int n_outputs_packed = 1 + n_dofs + n_dofs * n_dofs;
+
+	// Ingredients: [ energy(1) | P(dF) | A(dF*dF) | B(n_nodes*d_ref) | J(n_nodes*9) | Hgeo(n_nodes*27) ].
+	if (seq.get_n_outputs() != 1 + dF + nA + nB + nJ + nHg) {
+		std::cout << "symx error: _write_factorized_kernel_mapped got " << seq.get_n_outputs()
+			<< " ingredients, expected " << (1 + dF + nA + nB + nJ + nHg)
+			<< " (1 + dF + dF^2 + n_nodes*d_ref + n_nodes*9 + n_nodes*27 for d_ref=" << d_ref
+			<< ", n_nodes=" << n_nodes << ")." << std::endl;
+		exit(-1);
+	}
+
+	std::string sha256_checksum;
+	if (cache_id == "") {
+		sha256_checksum = std::string(64, '0');
+	}
+	else {
+		const std::string id = cache_id + std::to_string(static_cast<int>(float_type));
+		std::vector<unsigned char> hash(picosha2::k_digest_size);
+		picosha2::hash256(id.begin(), id.end(), hash.begin(), hash.end());
+		sha256_checksum = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+	}
+
+	std::string code;
+	code += "#include <cmath>\n#include <cstdio>\n#include <limits>\n\n";
+	code += "#if defined(_MSC_VER)\n#define EXPORT __declspec(dllexport)\n#else\n#define EXPORT\n#endif\n";
+	code += "#if defined(_MSC_VER)\n#define SYMX_RESTRICT __restrict\n#elif defined(__GNUC__) || defined(__clang__)\n#define SYMX_RESTRICT __restrict__\n#else\n#define SYMX_RESTRICT\n#endif\n\n";
+	code += "extern \"C\"\n{\n\n";
+	code += "EXPORT\nint get_n_inputs() { return " + std::to_string(seq.get_n_inputs()) + "; }\n\n";
+	code += "EXPORT\nint get_n_outputs() { return " + std::to_string(n_outputs_packed) + "; }\n\n";
+	code += "EXPORT\nint get_float_type() { return " + std::to_string(static_cast<int>(float_type)) + "; }\n\n";
+	code += "EXPORT\nvoid get_sha256(char* str) {\n\tchar id[] = \"" + sha256_checksum + "\";\n\tfor(int i = 0; i < 64; i++) {\n\t\tstr[i] = id[i];\n\t}\n}\n\n";
+
+	code += "EXPORT\nvoid " + name + "(" + type + "* SYMX_RESTRICT in, " + type + "* SYMX_RESTRICT out)\n{\n";
+	code += "\t/*\n";
+	code += seq.count_ops_string("\t\t");
+	code += "\t\t(Not counting matrix product ops: G^T P and G^T A G and geometric stiffness)\n";
+	code += "\t*/\n";
+
+	code += "\talignas(64) " + type + " Ploc[" + std::to_string(dF) + "] = {};\n";
+	code += "\talignas(64) " + type + " Aloc[" + std::to_string(nA) + "] = {};\n";
+	code += "\talignas(64) " + type + " Bloc[" + std::to_string(nB) + "] = {};\n";
+	code += "\talignas(64) " + type + " Jloc[" + std::to_string(nJ) + "] = {};\n";
+	code += "\talignas(64) " + type + " Hgeoloc[" + std::to_string(nHg) + "] = {};\n";
+	code += "\talignas(64) " + type + " Wloc[" + std::to_string(dF * n_dofs) + "] = {};\n";
+	code += "\talignas(64) " + type + " qloc[" + std::to_string(n_nodes * 3) + "] = {};\n";
+
+	auto out_lvalue = [dF, nA, nB, nJ](int dst) -> std::string {
+		if (dst == 0) return "out[0]";
+		int k = dst - 1;
+		if (k < dF) return "Ploc[" + std::to_string(k) + "]";
+		k -= dF;
+		if (k < nA) return "Aloc[" + std::to_string(k) + "]";
+		k -= nA;
+		if (k < nB) return "Bloc[" + std::to_string(k) + "]";
+		k -= nB;
+		if (k < nJ) return "Jloc[" + std::to_string(k) + "]";
+		k -= nJ;
+		return "Hgeoloc[" + std::to_string(k) + "]";
+	};
+	this->_add_instructions_scalar(code, seq, type, out_lvalue);
+
+	const std::string DR = std::to_string(d_ref);
+	const std::string N = std::to_string(n_nodes);
+	const std::string ND = std::to_string(n_dofs);
+	const std::string DF = std::to_string(dF);
+
+	// x-space per-node force q[l][a] = sum_b B[l,b] * P[d_ref*a + b].  (q[l] = G^T P restricted to node l)
+	code += "\tfor (int l = 0; l < " + N + "; l++) for (int a = 0; a < 3; a++) {\n";
+	code += "\t\t" + type + " acc = 0;\n";
+	code += "\t\tfor (int b = 0; b < " + DR + "; b++) acc += Bloc[l*" + DR + "+b] * Ploc[" + DR + "*a+b];\n";
+	code += "\t\tqloc[l*3+a] = acc;\n";
+	code += "\t}\n";
+
+	// Gradient: out[1 + 3*l+i] = sum_a J_l[a][i] * q[l][a].
+	code += "\tfor (int l = 0; l < " + N + "; l++) for (int i = 0; i < 3; i++) {\n";
+	code += "\t\t" + type + " acc = 0;\n";
+	code += "\t\tfor (int a = 0; a < 3; a++) acc += Jloc[l*9 + a*3 + i] * qloc[l*3+a];\n";
+	code += "\t\tout[1 + 3*l+i] = acc;\n";
+	code += "\t}\n";
+
+	// Stage 1: W[p, 3*l+i] = sum_a J_l[a][i] * ( sum_b A[p, d_ref*a+b] * B[l,b] ).
+	code += "\tfor (int p = 0; p < " + DF + "; p++) for (int l = 0; l < " + N + "; l++) {\n";
+	code += "\t\t" + type + " AB[3];\n";
+	code += "\t\tfor (int a = 0; a < 3; a++) { " + type + " s = 0; for (int b = 0; b < " + DR + "; b++) s += Aloc[p*" + DF + " + " + DR + "*a+b] * Bloc[l*" + DR + "+b]; AB[a] = s; }\n";
+	code += "\t\tfor (int i = 0; i < 3; i++) { " + type + " w = 0; for (int a = 0; a < 3; a++) w += Jloc[l*9 + a*3 + i] * AB[a]; Wloc[p*" + ND + " + 3*l+i] = w; }\n";
+	code += "\t}\n";
+
+	// Stage 2 (material): out[3*k+j, col] = sum_a J_k[a][j] * ( sum_b B[k,b] * W[d_ref*a+b, col] ).
+	code += "\tfor (int k = 0; k < " + N + "; k++) for (int j = 0; j < 3; j++) {\n";
+	code += "\t\t" + type + "* SYMX_RESTRICT out_row = out + 1 + " + ND + " + (3*k+j)*" + ND + ";\n";
+	code += "\t\t#pragma omp simd\n";
+	code += "\t\tfor (int col = 0; col < " + ND + "; col++) {\n";
+	code += "\t\t\t" + type + " h = 0;\n";
+	code += "\t\t\tfor (int a = 0; a < 3; a++) { " + type + " bw = 0; for (int b = 0; b < " + DR + "; b++) bw += Bloc[k*" + DR + "+b] * Wloc[(" + DR + "*a+b)*" + ND + " + col]; h += Jloc[k*9 + a*3 + j] * bw; }\n";
+	code += "\t\t\tout_row[col] = h;\n";
+	code += "\t\t}\n";
+	code += "\t}\n";
+
+	// Geometric stiffness (node-diagonal): out[3*l+i, 3*l+i'] += sum_a q[l][a] * Hgeo_l[a][i][i'].
+	code += "\tfor (int l = 0; l < " + N + "; l++) for (int i = 0; i < 3; i++) for (int ip = 0; ip < 3; ip++) {\n";
+	code += "\t\t" + type + " kk = 0;\n";
+	code += "\t\tfor (int a = 0; a < 3; a++) kk += qloc[l*3+a] * Hgeoloc[l*27 + a*9 + i*3 + ip];\n";
+	code += "\t\tout[1 + " + ND + " + (3*l+i)*" + ND + " + (3*l+ip)] += kk;\n";
+	code += "\t}\n";
+
+	code += "}\n\n} // extern \"C\"\n";
+
+	std::filesystem::create_directories(folder);
+	std::ofstream outfile(folder + "/" + name + ".cpp");
+	if (!outfile) {
+		std::cout << "symx error: Cannot open the file " + folder + "/" + name + ".cpp" << std::endl;
+		exit(-1);
+	}
+	outfile << code;
+	outfile.close();
+}
+
 int symx::Compilation::get_n_inputs() const
 {
 	return this->n_inputs;
@@ -378,7 +716,7 @@ void symx::Compilation::Info::print() const
 	std::cout << "Number of bytes for symbols:  " << this->n_bytes_symbols << " bytes" << std::endl;
 }
 
-void symx::Compilation::_add_instructions_scalar(std::string& code, Sequence& seq, const std::string& type)
+void symx::Compilation::_add_instructions_scalar(std::string& code, Sequence& seq, const std::string& type, const std::function<std::string(int)>& out_lvalue)
 {
 	auto idx = [&](const int32_t& i)
 	{
@@ -405,7 +743,7 @@ void symx::Compilation::_add_instructions_scalar(std::string& code, Sequence& se
 		switch (op.type)
 		{
 		case ExprType::Symbol: // Represents output
-			code += tab() + "out[" + std::to_string(op.dst) + "] = " + idx(op.a) + ";\n"; break;
+			code += tab() + out_lvalue(op.dst) + " = " + idx(op.a) + ";\n"; break;
 		case ExprType::ConstantFloat:
 			code += tab() + type + " " + idx(op.dst) + " = " + to_string_with_precision(op.constant, 20) + ";\n"; break;
 		case ExprType::Add:

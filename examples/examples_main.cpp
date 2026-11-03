@@ -106,7 +106,7 @@ int main()
         and logs.
     */
     if (run_all || run_rubber_extrusion_comparison) {
-        rubber_extrusion_comparison();
+        rubber_extrusion_comparison(RubberExtrusionMode::FactorizedFEM);
     }
     
     /*

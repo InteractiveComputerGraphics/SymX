@@ -54,6 +54,7 @@ namespace symx
 
         SolverReturn solve();
         const SolveStats& get_last_solve_stats() const { return this->stats; }
+        spFirstOrderCompiledGlobal get_compiled() const { return this->compiled; }
         void print_summary(double total_time = -1.0) const;
 
     private:

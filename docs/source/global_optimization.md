@@ -120,3 +120,21 @@ G->apply_dof_increment(du.data()); // in-place update: x ← x + Δx
 ```
 
 These operations are used internally at each Newton iteration, and they are accessible to the user.
+
+## Energy and gradient breakdown
+
+Both `NewtonsMethod` and `FirstOrderOptimizer` expose their compiled evaluator through
+`get_compiled()`. To inspect individual energy contributions at the current DoFs:
+
+```cpp
+auto compiled = optimizer->get_compiled();
+auto energies = compiled->evaluate_P_components();
+auto components = compiled->evaluate_P__dP_du_components();
+
+double energy = components.energies.at("new_potential");
+const Eigen::VectorXd& gradient = components.gradients.at("new_potential");
+```
+
+Keys are the unique names passed to `add_potential()` or `add_potential_fem()`.
+Summing the component energies and gradients gives the results of
+`evaluate_P()` and `evaluate_P__dP_du()`.

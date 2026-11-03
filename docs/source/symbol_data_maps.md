@@ -174,7 +174,8 @@ where $P$ is the total potential, $E$ is the element potential, $n_e$ is the num
 In the inner loop, $\mathrm x_e$ is constant; the summation occurs for different values of $\mathrm p_i$.
 
 SymX fully supports this logic, including differentiation, CSE, SIMD vectorization, parallelism, etc.
-We can indicate summation in SymX using `MappedWorkspace::add_for_each()`, which takes a fixed summation array and a lambda function.
+`MappedWorkspace::make_summation_vector(rule)` creates the shared rule symbols directly.
+`MappedWorkspace::add_for_each()` wraps that declaration in a lambda for a nested-loop style; the callback runs once during definition and its result is returned unchanged.
 For illustration, this is how the summation of the Lagrange Tet10 element can be written in SymX:
 
 ```cpp
@@ -195,6 +196,10 @@ Scalar result = mws->add_for_each(integration_rule_tet10,
     }
 );
 ```
+
+For inputs that differ by element and integration point through `make_quadrature_*()`, or summations with a different length for each element through `make_summation(offsets)`, see [Advanced FEM and Integration](advanced_integration.md).
+Both forms also support the `add_for_each()` wrapper.
+The [rubber extrusion showcase](rubber-extrusion-example) demonstrates shared rules and indexed integration-point data in a complete FEM solve.
 
 ## FEM Example
 Let's use a bit more complex FEM example to showcase several options to create indexed symbols from data arrays.

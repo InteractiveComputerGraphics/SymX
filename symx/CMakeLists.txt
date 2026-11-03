@@ -37,6 +37,8 @@ set(SOURCE_FILES
 	src/symbol/Scalar.h
 	src/symbol/diff.cpp
 	src/symbol/diff.h
+	src/symbol/substitute.cpp
+	src/symbol/substitute.h
 	src/symbol/Expr.h
 	src/symbol/Expressions.cpp
 	src/symbol/Expressions.h
@@ -188,36 +190,78 @@ message(STATUS "SymX: Codegen directory set to: ${SYMX_CODEGEN_DIR}")
 # Public include directory
 target_include_directories(symx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Optional Intel oneMKL/PARDISO support.  Keep the parent project's MKL
-# selection intact: SYMX_MKL_DIR is only a search hint and existing MKL cache
-# variables take precedence.
-option(SYMX_ENABLE_MKL "Use Intel oneMKL/PARDISO through Eigen" OFF)
+# Optional Intel oneMKL/PARDISO support. An existing MKL::MKL target or a
+# discoverable oneMKL package enables it automatically.
+set(SYMX_ENABLE_MKL "AUTO" CACHE STRING
+    "Use Intel oneMKL/PARDISO through Eigen: AUTO, ON, or OFF")
+set_property(CACHE SYMX_ENABLE_MKL PROPERTY STRINGS AUTO ON OFF)
 set(SYMX_MKL_DIR "" CACHE PATH
     "Optional path to Intel oneMKL's CMake package directory")
-if(SYMX_ENABLE_MKL)
-    if(NOT DEFINED MKL_INTERFACE)
-        set(MKL_INTERFACE lp64 CACHE STRING "oneMKL interface width")
-    endif()
-    if(NOT DEFINED MKL_THREADING)
-        set(MKL_THREADING gnu_thread CACHE STRING "oneMKL threading layer")
+string(TOUPPER "${SYMX_ENABLE_MKL}" _symx_mkl_mode)
+if(NOT _symx_mkl_mode MATCHES "^(AUTO|ON|OFF)$")
+    message(FATAL_ERROR
+        "SYMX_ENABLE_MKL must be AUTO, ON, or OFF (got: ${SYMX_ENABLE_MKL})")
+endif()
+if(NOT _symx_mkl_mode STREQUAL "OFF")
+    if(NOT TARGET MKL::MKL)
+        if(NOT DEFINED MKL_INTERFACE)
+            set(MKL_INTERFACE lp64 CACHE STRING "oneMKL interface width")
+        endif()
+        if(NOT DEFINED MKL_THREADING AND UNIX
+                AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            set(MKL_THREADING gnu_thread CACHE STRING "oneMKL threading layer")
+        endif()
+
+        # Standard CMake package paths (including MKL_DIR and CMAKE_PREFIX_PATH)
+        # remain available. These hints also cover oneAPI installations whose
+        # environment script has not been sourced.
+        set(_symx_mkl_hints "${SYMX_MKL_DIR}")
+        if(DEFINED ENV{MKLROOT})
+            list(APPEND _symx_mkl_hints "$ENV{MKLROOT}")
+        endif()
+        if(DEFINED ENV{ONEAPI_ROOT})
+            list(APPEND _symx_mkl_hints "$ENV{ONEAPI_ROOT}/mkl/latest")
+        endif()
+        set(_symx_oneapi_roots "/opt/intel/oneapi" "/usr/local/intel/oneapi")
+        if(WIN32)
+            list(APPEND _symx_oneapi_roots
+                "$ENV{ProgramFiles\(x86\)}/Intel/oneAPI"
+                "$ENV{ProgramFiles}/Intel/oneAPI")
+        endif()
+        foreach(_symx_oneapi_root IN LISTS _symx_oneapi_roots)
+            list(APPEND _symx_mkl_hints "${_symx_oneapi_root}/mkl/latest")
+            file(GLOB _symx_mkl_versions LIST_DIRECTORIES TRUE
+                "${_symx_oneapi_root}/mkl/[0-9]*")
+            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+                list(SORT _symx_mkl_versions COMPARE NATURAL ORDER DESCENDING)
+            else()
+                list(REVERSE _symx_mkl_versions)
+            endif()
+            list(APPEND _symx_mkl_hints ${_symx_mkl_versions})
+        endforeach()
+        list(REMOVE_ITEM _symx_mkl_hints "")
+        find_package(MKL CONFIG QUIET HINTS ${_symx_mkl_hints})
     endif()
 
-    if(SYMX_MKL_DIR STREQUAL "")
-        find_package(MKL CONFIG REQUIRED)
+    if(TARGET MKL::MKL)
+        target_compile_definitions(symx PUBLIC SYMX_ENABLE_MKL EIGEN_USE_MKL_ALL)
+        target_link_libraries(symx PUBLIC MKL::MKL)
+        message(STATUS "SymX: MKL/PARDISO direct solver enabled (${_symx_mkl_mode})")
+    elseif(_symx_mkl_mode STREQUAL "ON")
+        message(FATAL_ERROR
+            "SYMX_ENABLE_MKL=ON requires a usable oneMKL package with MKL::MKL. "
+            "Set MKL_DIR to its CMake package directory, or set "
+            "CMAKE_PREFIX_PATH or MKLROOT to the oneMKL installation root.")
     else()
-        find_package(MKL CONFIG REQUIRED HINTS "${SYMX_MKL_DIR}")
+        message(STATUS "SymX: oneMKL not found; using Eigen's direct solver")
     endif()
-
-    target_compile_definitions(symx PUBLIC SYMX_ENABLE_MKL EIGEN_USE_MKL_ALL)
-    target_link_libraries(symx PUBLIC MKL::MKL)
-    message(STATUS "SymX: MKL/PARDISO direct solver enabled")
+else()
+    message(STATUS "SymX: MKL/PARDISO direct solver disabled")
 endif()
 
 # Dependencies
-## libdl for shared-object loading (Linux/GCC)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(symx PRIVATE dl)
-endif()
+## Platform libraries for shared-object loading (empty where none are needed).
+target_link_libraries(symx PRIVATE ${CMAKE_DL_LIBS})
 
 ## Eigen — header-only, types appear in the public API.
 if(SYMX_EIGEN_PUBLIC)
@@ -227,17 +271,10 @@ else()
 endif()
 
 # Parse the bundled Eigen version once so we can print it in the status message.
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/extern/Eigen/Eigen/src/Core/util/Macros.h"
-    _eigen_ver_lines REGEX "^#define EIGEN_(WORLD|MAJOR|MINOR)_VERSION ")
-foreach(_line ${_eigen_ver_lines})
-    if(_line MATCHES "EIGEN_WORLD_VERSION ([0-9]+)")
-        set(_ew ${CMAKE_MATCH_1})
-    elseif(_line MATCHES "EIGEN_MAJOR_VERSION ([0-9]+)")
-        set(_ema ${CMAKE_MATCH_1})
-    elseif(_line MATCHES "EIGEN_MINOR_VERSION ([0-9]+)")
-        set(_emi ${CMAKE_MATCH_1})
-    endif()
-endforeach()
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/extern/Eigen/Eigen/Version"
+    _eigen_ver_str REGEX "^#define EIGEN_VERSION_STRING ")
+string(REGEX MATCH "\"([^\"]+)\"" _eigen_ver_match "${_eigen_ver_str}")
+set(_eigen_version "${CMAKE_MATCH_1}")
 
 # Source selection: pre-existing target → system installation → bundled copy.
 if(TARGET Eigen3::Eigen)
@@ -250,7 +287,7 @@ else()
         target_link_libraries(symx ${_eigen_vis} Eigen3::Eigen)
     else()
         unset(Eigen3_DIR CACHE)  # prevent NOTFOUND entry from polluting the CMake cache
-        message(STATUS "SymX: Eigen3 — using copy bundled with SymX (v${_ew}.${_ema}.${_emi})")
+        message(STATUS "SymX: Eigen3 — using copy bundled with SymX (v${_eigen_version})")
         target_include_directories(symx SYSTEM ${_eigen_vis}
             ${CMAKE_CURRENT_SOURCE_DIR}/extern/Eigen)
     endif()
@@ -258,8 +295,17 @@ endif()
 
 ## fmt — compiled library; used only inside .cpp files, not in public headers.
 # Parse the bundled fmt version once so we can print it in the status message.
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/extern/fmt/include/fmt/core.h"
-    _fmt_ver_str REGEX "^#define FMT_VERSION ")
+# fmt >= 11 defines FMT_VERSION in base.h; older releases define it in core.h.
+set(_fmt_ver_str "")
+foreach(_fmt_ver_header base.h core.h)
+    set(_fmt_ver_path "${CMAKE_CURRENT_SOURCE_DIR}/extern/fmt/include/fmt/${_fmt_ver_header}")
+    if(EXISTS "${_fmt_ver_path}")
+        file(STRINGS "${_fmt_ver_path}" _fmt_ver_str REGEX "^#define FMT_VERSION ")
+    endif()
+    if(_fmt_ver_str)
+        break()
+    endif()
+endforeach()
 if(_fmt_ver_str MATCHES "FMT_VERSION ([0-9]+)")
     math(EXPR _fmaj "${CMAKE_MATCH_1} / 10000")
     math(EXPR _fmin "(${CMAKE_MATCH_1} % 10000) / 100")
@@ -270,24 +316,36 @@ else()
     set(_fpat "?")
 endif()
 
-# Source selection: pre-existing target → system installation → bundled copy.
+# Prefer the bundled compiled library so an unrelated package installation
+# (e.g. Conda) cannot add its runtime libraries to native executables' RPATH.
+option(SYMX_USE_SYSTEM_FMT "Search for an installed fmt instead of the bundled copy" OFF)
+
+# Source selection: pre-existing target → optional system installation → bundled copy.
 if(TARGET fmt::fmt)
     message(STATUS "SymX: fmt — using pre-existing fmt::fmt target")
 else()
-    find_package(fmt QUIET)
-    if(fmt_FOUND)
+    if(SYMX_USE_SYSTEM_FMT)
+        find_package(fmt QUIET)
+    endif()
+    if(TARGET fmt::fmt)
         message(STATUS "SymX: fmt — found system installation (v${fmt_VERSION})")
     else()
-        unset(fmt_DIR CACHE)  # prevent NOTFOUND entry from polluting the CMake cache
+        if(SYMX_USE_SYSTEM_FMT)
+            unset(fmt_DIR CACHE)  # prevent NOTFOUND entry from polluting the CMake cache
+        endif()
         message(STATUS "SymX: fmt — using copy bundled with SymX (v${_fmaj}.${_fmin}.${_fpat})")
-        add_subdirectory(extern/fmt)
+        # Mark fmt's headers as system headers for consumers (as before with SYMX_FMT_PUBLIC).
+        set(FMT_SYSTEM_HEADERS ON)
+        add_subdirectory(extern/fmt EXCLUDE_FROM_ALL)
     endif()
 endif()
 
-target_link_libraries(symx PRIVATE fmt::fmt)
+# Link publicly when consumers use fmt, so they also receive fmt's usage
+# requirements (e.g. /utf-8 on MSVC, which fmt >= 11 enforces).
 if(SYMX_FMT_PUBLIC)
-    target_include_directories(symx SYSTEM PUBLIC
-        $<TARGET_PROPERTY:fmt::fmt,INTERFACE_INCLUDE_DIRECTORIES>)
+    target_link_libraries(symx PUBLIC fmt::fmt)
+else()
+    target_link_libraries(symx PRIVATE fmt::fmt)
 endif()
 
 ## BlockedSparseMatrix — header-only, types appear in the public API (NewtonsMethod.h).

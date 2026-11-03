@@ -41,7 +41,7 @@ namespace symx
         LinearSolveContext(const LinearSolveContext&) = delete;
         LinearSolveContext& operator=(const LinearSolveContext&) = delete;
 
-        // Discard cached symbolic-factorisation state explicitly.
+        // Discard cached matrix storage and symbolic-factorisation state.
         void reset();
         bool solve_direct_llt(
             const ElementHessians::spBSM& hess,

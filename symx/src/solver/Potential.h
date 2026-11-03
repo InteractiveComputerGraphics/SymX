@@ -5,6 +5,15 @@
 
 namespace symx
 {
+    struct FactorizationData
+    {
+        Matrix A_dof_w;
+        Vector P_dof_w;
+        Matrix B;
+        Matrix x;
+        Scalar material_unsubstituted;
+    };
+
     /*
      * Wraps a single symbolic energy expression defined in a MappedWorkspace.
      * Stores the scalar expression (and optional condition for conditional evaluation)
@@ -24,6 +33,10 @@ namespace symx
         bool has_conditional() const;
         Scalar get_condition() const;
 
+        void set_factorization(std::unique_ptr<FactorizationData> data);
+        bool is_factorized() const;
+        const FactorizationData& get_factorization() const;
+
         std::vector<Scalar> get_symbols(const DataMap<double>& data_map) const;
 
     private:
@@ -32,5 +45,6 @@ namespace symx
         spMWS<double> mws;
         std::unique_ptr<Scalar> expr = nullptr;
         std::unique_ptr<Scalar> cond = nullptr;
+        std::unique_ptr<FactorizationData> factorization = nullptr;
     };
 } // namespace symx

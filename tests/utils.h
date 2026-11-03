@@ -3,10 +3,53 @@
 #include <Eigen/Dense>
 #include "catch.hpp"
 
+#if !defined(_WIN32)
+#include <csignal>
+#include <cstdio>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 inline bool approx(double a, double b, double tol = 1e-12)
 {
 	return std::abs(a - b) < tol;
 }
+
+#if !defined(_WIN32)
+struct ExpectedFailureResult
+{
+	bool failed;
+	std::string diagnostic;
+};
+
+template<typename F>
+ExpectedFailureResult run_expected_failure(F&& f)
+{
+	FILE* capture = tmpfile();
+	REQUIRE(capture != nullptr);
+	const pid_t child = fork();
+	REQUIRE(child >= 0);
+	if (child == 0) {
+		dup2(fileno(capture), STDOUT_FILENO);
+		dup2(fileno(capture), STDERR_FILENO);
+		try { f(); }
+		catch (const std::exception& e) { std::cerr << e.what() << std::endl; _exit(1); }
+		catch (...) { _exit(1); }
+		_exit(0);
+	}
+	int status = 0;
+	REQUIRE(waitpid(child, &status, 0) == child);
+	rewind(capture);
+	std::string diagnostic;
+	char buffer[256];
+	while (const size_t n = fread(buffer, 1, sizeof(buffer), capture)) {
+		diagnostic.append(buffer, n);
+	}
+	fclose(capture);
+	return {(WIFEXITED(status) && WEXITSTATUS(status) != 0)
+		|| (WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT), diagnostic};
+}
+#endif
 
 template<typename STATIC_ARRAY>
 inline bool approx(const STATIC_ARRAY& a, const STATIC_ARRAY& b, double tol = 1e-12)

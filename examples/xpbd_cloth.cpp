@@ -432,7 +432,7 @@ void xpbd_cloth_sim(int n_threads, int res, bool enable_output)
             vtkio::VTKFile vtk_file;
             vtk_file.set_points_from_twice_indexable(data.x1);
             vtk_file.set_cells_from_twice_indexable(mesh.triangles, vtkio::CellType::Triangle);
-            vtk_file.write(fmt::format(std::string(SYMX_EXAMPLES_OUTPUT_DIR) + "/xpbd_cloth/xpbd_cloth_{:04d}.vtk", frame_idx));
+            vtk_file.write(fmt::format("{}/xpbd_cloth/xpbd_cloth_{:04d}.vtk", SYMX_EXAMPLES_OUTPUT_DIR, frame_idx));
             frame_idx++;
         }
     }

@@ -5,6 +5,8 @@
 #include <array>
 #include <iostream>
 #include <memory>
+#include <limits>
+#include <utility>
 #include <Eigen/Dense>
 
 #include "../symbol/Workspace.h"
@@ -21,6 +23,21 @@ namespace symx
     {
         std::vector<FLOAT> data;
         int32_t n_iterations = -1;
+        int32_t stride = -1;
+        int32_t first_symbol_idx = -1;
+        // Dynamic ranges index flat quadrature entries by connectivity row.
+        std::function<const int64_t*()> offsets;
+        std::function<int64_t()> n_offsets;
+
+        bool is_dynamic() const { return static_cast<bool>(offsets); }
+    };
+
+    template<typename FLOAT>
+    struct IterationMap
+    {
+        std::function<std::uintptr_t()> id;
+        std::function<const FLOAT*()> data;
+        std::function<int64_t()> n_values;
         int32_t stride = -1;
         int32_t first_symbol_idx = -1;
     };
@@ -50,6 +67,7 @@ namespace symx
         Workspace ws;                            // Symbolic expressions
         Summation<FLOAT> summation;              // Optional: data for summation loops
         std::vector<DataMap<const FLOAT>> maps;  // Bindings: symbols -> actual data (const because inputs are read-only)
+		std::vector<IterationMap<FLOAT>> iter_maps; // Per-connectivity-row, per-summation-iteration inputs
 		ConnectivityMap conn;                    // Connectivity: defines loop iteration structure
 		std::string name = "NO_NAME";            // Debug name for error messages
 
@@ -120,14 +138,39 @@ namespace symx
 		template<typename DYNAMIC_VECTOR>
 		inline std::vector<Matrix> make_matrices(const DYNAMIC_VECTOR& arr, const std::array<int, 2> shape, const std::vector<Index>& indices);
 		
-		// Make summation vector
+		// Make summation vector (fixed summation size and data, e.g. FEM integration)
 		inline Vector make_summation_vector(const FLOAT* data, const int32_t stride, const int32_t n_iterations);
 		template<typename STATIC_VECTOR>
 		inline Vector make_summation_vector(const std::vector<STATIC_VECTOR>& iteration_vectors);
-		template<typename STATIC_VECTOR>
-		inline Scalar add_for_each(const std::vector<STATIC_VECTOR>& iteration_vectors, std::function<Scalar(Vector& vec)> f);
-		inline Scalar add_for_each(const EigenMatrixRM<FLOAT>& iteration_vectors, std::function<Scalar(Vector& vec)> f);
+		// Definition-time wrappers return the callback result, including FEM splits.
+		template<typename STATIC_VECTOR, typename DEFINITION>
+		inline auto add_for_each(const std::vector<STATIC_VECTOR>& iteration_vectors, DEFINITION f);
+		template<typename DEFINITION>
+		inline auto add_for_each(const EigenMatrixRM<FLOAT>& iteration_vectors, DEFINITION f);
 		inline bool has_summation() const;
+		
+		// Per-iteration indexable data within summations
+		inline void make_summation(const int32_t n_iterations);
+		template<typename DEFINITION>
+		inline auto add_for_each(const int32_t n_iterations, DEFINITION f);
+		// Referenced point offsets: row e uses [offsets[e], offsets[e + 1]). Equal
+		// offsets give zero outputs. Dynamic summations require scalar compiled types.
+		inline void make_summation(const std::vector<int64_t>& offsets);
+		inline void make_summation(std::function<const int64_t*()> offsets, std::function<int64_t()> n_offsets);
+		template<typename DEFINITION>
+		inline auto add_for_each(const std::vector<int64_t>& offsets, DEFINITION f);
+		template<typename DEFINITION>
+		inline auto add_for_each(std::function<const int64_t*()> offsets, std::function<int64_t()> n_offsets, DEFINITION f);
+		inline Vector make_quadrature_vector(std::function<std::uintptr_t()> id, std::function<const FLOAT*()> data, std::function<int64_t()> n_values, const int32_t stride);
+		inline Vector make_quadrature_vector(const std::vector<FLOAT>& data, const int32_t stride);
+		template<std::size_t N>
+		inline Vector make_quadrature_vector(const std::vector<std::array<FLOAT, N>>& data);
+		inline Vector make_quadrature_vector(const EigenMatrixRM<FLOAT>& data);
+		inline Scalar make_quadrature_scalar(const std::vector<FLOAT>& data);
+		inline Matrix make_quadrature_matrix(const std::vector<FLOAT>& data, const std::array<int32_t, 2> shape);
+		inline Matrix make_quadrature_matrix(const EigenMatrixRM<FLOAT>& data, const std::array<int32_t, 2> shape);
+		inline void verify_iteration_maps() const;
+		inline bool has_iteration_map_with_id(const std::uintptr_t id) const;
 
 		// Make constants
 		inline Scalar make_zero();
@@ -148,6 +191,7 @@ namespace symx
 		
 		// Misc
 		inline const Workspace& get_workspace() const;
+		inline Workspace& get_workspace();
 
 		/*
 		* Get symbols and maps relevant to a given DataMap. Used for CompiledInLoop to know which symbols 
@@ -561,7 +605,7 @@ namespace symx
     template <typename FLOAT>
     inline bool MappedWorkspace<FLOAT>::has_summation() const
     {
-        return this->summation.n_iterations > 0;
+        return this->summation.is_dynamic() || this->summation.n_iterations > 0;
     }
 
     // Convenience method for vector of arrays
@@ -569,21 +613,26 @@ namespace symx
 	template<typename STATIC_VECTOR>
 	inline Vector MappedWorkspace<FLOAT>::make_summation_vector(const std::vector<STATIC_VECTOR>& iteration_vectors)
 	{
+		if (iteration_vectors.empty()) {
+			std::cout << "symx error: MappedWorkspace::make_summation_vector() got an empty iteration vector" << std::endl;
+			exit(-1);
+		}
 		constexpr int32_t stride = sizeof(STATIC_VECTOR) / sizeof(FLOAT);
 		const int32_t n_iterations = (int32_t)iteration_vectors.size();
 		return this->make_summation_vector(iteration_vectors[0].data(), stride, n_iterations);
 	}
 
     template <typename FLOAT>
-    template <typename STATIC_VECTOR>
-    inline Scalar MappedWorkspace<FLOAT>::add_for_each(const std::vector<STATIC_VECTOR> &iteration_vectors, std::function<Scalar(Vector &vec)> f)
+    template <typename STATIC_VECTOR, typename DEFINITION>
+    inline auto MappedWorkspace<FLOAT>::add_for_each(const std::vector<STATIC_VECTOR> &iteration_vectors, DEFINITION f)
     {
 		Vector summation_vector = this->make_summation_vector(iteration_vectors);
 		return f(summation_vector);
     }
 
     template <typename FLOAT>
-    inline Scalar MappedWorkspace<FLOAT>::add_for_each(const EigenMatrixRM<FLOAT> &iteration_vectors, std::function<Scalar(Vector &vec)> f)
+    template <typename DEFINITION>
+    inline auto MappedWorkspace<FLOAT>::add_for_each(const EigenMatrixRM<FLOAT> &iteration_vectors, DEFINITION f)
     {
 		this->_check_Eigen_stride_inferrable(iteration_vectors, "in add_for_each");
 		const int32_t stride = (int32_t)iteration_vectors.cols();
@@ -591,6 +640,205 @@ namespace symx
 		Vector summation_vector = this->make_summation_vector(iteration_vectors.data(), stride, n_iterations);
 		return f(summation_vector);
     }
+
+	// ============================================================================
+	// Indexable summation data
+	// ============================================================================
+	template<typename FLOAT>
+	inline void MappedWorkspace<FLOAT>::make_summation(const int32_t n_iterations)
+	{
+		if (this->has_summation()) {
+			const std::string name_prefix = this->name.empty() ? "" : "\"" + this->name + "\" ";
+			std::cout << "symx error: MappedWorkspace " << name_prefix
+			          << "summation already set - only one summation per workspace is allowed" << std::endl;
+			exit(-1);
+		}
+		if (n_iterations <= 0) {
+			std::cout << "symx error: MappedWorkspace::make_summation() got invalid n_iterations: " << n_iterations << std::endl;
+			exit(-1);
+		}
+		this->summation.n_iterations = n_iterations;
+		this->summation.stride = 0;
+	}
+
+	template<typename FLOAT>
+	template<typename DEFINITION>
+	inline auto MappedWorkspace<FLOAT>::add_for_each(const int32_t n_iterations, DEFINITION f)
+	{
+		this->make_summation(n_iterations);
+		return f();
+	}
+
+	template<typename FLOAT>
+	inline void MappedWorkspace<FLOAT>::make_summation(const std::vector<int64_t>& offsets)
+	{
+		this->make_summation(
+			[&offsets]() { return offsets.data(); },
+			[&offsets]() { return static_cast<int64_t>(offsets.size()); });
+	}
+
+	template<typename FLOAT>
+	inline void MappedWorkspace<FLOAT>::make_summation(std::function<const int64_t*()> offsets, std::function<int64_t()> n_offsets)
+	{
+		if (this->has_summation()) {
+			std::cout << "symx error: MappedWorkspace \"" << this->name
+			          << "\" summation already set - only one summation per workspace is allowed" << std::endl;
+			exit(-1);
+		}
+		if (!offsets || !n_offsets) {
+			std::cout << "symx error: MappedWorkspace::make_summation() got invalid offset provider" << std::endl;
+			exit(-1);
+		}
+		this->summation.offsets = std::move(offsets);
+		this->summation.n_offsets = std::move(n_offsets);
+		this->summation.stride = 0;
+	}
+
+	template<typename FLOAT>
+	template<typename DEFINITION>
+	inline auto MappedWorkspace<FLOAT>::add_for_each(const std::vector<int64_t>& offsets, DEFINITION f)
+	{
+		this->make_summation(offsets);
+		return f();
+	}
+
+	template<typename FLOAT>
+	template<typename DEFINITION>
+	inline auto MappedWorkspace<FLOAT>::add_for_each(std::function<const int64_t*()> offsets, std::function<int64_t()> n_offsets, DEFINITION f)
+	{
+		this->make_summation(std::move(offsets), std::move(n_offsets));
+		return f();
+	}
+
+	template<typename FLOAT>
+	inline Vector MappedWorkspace<FLOAT>::make_quadrature_vector(std::function<std::uintptr_t()> id, std::function<const FLOAT*()> data, std::function<int64_t()> n_values, const int32_t stride)
+	{
+		if (!id || !data || !n_values || stride <= 0) {
+			std::cout << "symx error: MappedWorkspace::make_quadrature_vector() got invalid data provider or stride" << std::endl;
+			exit(-1);
+		}
+		this->iter_maps.push_back({id, data, n_values, stride, this->ws.get_n_symbols()});
+		return this->ws.make_vector(stride);
+	}
+
+	template<typename FLOAT>
+	inline Vector MappedWorkspace<FLOAT>::make_quadrature_vector(const std::vector<FLOAT>& data, const int32_t stride)
+	{
+		return this->make_quadrature_vector(
+			[&data]() { return reinterpret_cast<std::uintptr_t>(&data); },
+			[&data]() { return data.data(); },
+			[&data]() { return static_cast<int64_t>(data.size()); }, stride);
+	}
+
+	template<typename FLOAT>
+	template<std::size_t N>
+	inline Vector MappedWorkspace<FLOAT>::make_quadrature_vector(const std::vector<std::array<FLOAT, N>>& data)
+	{
+		static_assert(N > 0, "Quadrature vectors must have at least one component");
+		static_assert(N <= static_cast<std::size_t>(std::numeric_limits<int32_t>::max()), "Quadrature vector has too many components");
+		static_assert(sizeof(std::array<FLOAT, N>) == N * sizeof(FLOAT), "Quadrature vectors must be tightly packed");
+		return this->make_quadrature_vector(
+			[&data]() { return reinterpret_cast<std::uintptr_t>(&data); },
+			[&data]() { return data.empty() ? nullptr : data[0].data(); },
+			[&data]() { return static_cast<int64_t>(data.size()) * N; }, static_cast<int32_t>(N));
+	}
+
+	template<typename FLOAT>
+	inline Vector MappedWorkspace<FLOAT>::make_quadrature_vector(const EigenMatrixRM<FLOAT>& data)
+	{
+		this->_check_Eigen_stride_inferrable(data, "in make_quadrature_vector");
+		return this->make_quadrature_vector(
+			[&data]() { return reinterpret_cast<std::uintptr_t>(&data); },
+			[&data]() { return data.data(); },
+			[&data]() { return static_cast<int64_t>(data.size()); }, static_cast<int32_t>(data.cols()));
+	}
+
+	template<typename FLOAT>
+	inline Scalar MappedWorkspace<FLOAT>::make_quadrature_scalar(const std::vector<FLOAT>& data)
+	{
+		return this->make_quadrature_vector(data, 1)[0];
+	}
+
+	template<typename FLOAT>
+	inline Matrix MappedWorkspace<FLOAT>::make_quadrature_matrix(const std::vector<FLOAT>& data, const std::array<int32_t, 2> shape)
+	{
+		if (shape[0] <= 0 || shape[1] <= 0 || static_cast<int64_t>(shape[0]) * shape[1] > std::numeric_limits<int32_t>::max()) {
+			std::cout << "symx error: MappedWorkspace::make_quadrature_matrix() got invalid shape" << std::endl;
+			exit(-1);
+		}
+		return Matrix(this->make_quadrature_vector(data, shape[0] * shape[1]).values(), shape);
+	}
+
+	template<typename FLOAT>
+	inline Matrix MappedWorkspace<FLOAT>::make_quadrature_matrix(const EigenMatrixRM<FLOAT>& data, const std::array<int32_t, 2> shape)
+	{
+		if (shape[0] <= 0 || shape[1] <= 0 || static_cast<int64_t>(shape[0]) * shape[1] > std::numeric_limits<int32_t>::max()
+		    || data.cols() != shape[0] * shape[1]) {
+			std::cout << "symx error: MappedWorkspace::make_quadrature_matrix() got incompatible data shape" << std::endl;
+			exit(-1);
+		}
+		return Matrix(this->make_quadrature_vector(data).values(), shape);
+	}
+
+	template<typename FLOAT>
+	inline void MappedWorkspace<FLOAT>::verify_iteration_maps() const
+	{
+		int64_t required = static_cast<int64_t>(this->conn.n_elements()) * this->summation.n_iterations;
+		if (this->summation.is_dynamic()) {
+			const int64_t expected = static_cast<int64_t>(this->conn.n_elements()) + 1;
+			const int64_t* offsets = this->summation.offsets();
+			if (!this->summation.n_offsets || this->summation.n_offsets() != expected || !offsets || expected <= 0) {
+				std::cout << "symx error: MappedWorkspace \"" << this->name
+				          << "\" dynamic summation requires " << expected << " offsets" << std::endl;
+				exit(-1);
+			}
+			if (offsets[0] != 0) {
+				std::cout << "symx error: MappedWorkspace \"" << this->name
+				          << "\" dynamic summation offsets must start at zero" << std::endl;
+				exit(-1);
+			}
+			for (int64_t e = 1; e < expected; e++) {
+				if (offsets[e] < offsets[e - 1]) {
+					std::cout << "symx error: MappedWorkspace \"" << this->name
+					          << "\" dynamic summation offsets must be nondecreasing" << std::endl;
+					exit(-1);
+				}
+			}
+			required = offsets[expected - 1];
+		}
+		if (this->iter_maps.empty()) { return; }
+		if (!this->has_summation()) {
+			std::cout << "symx error: MappedWorkspace \"" << this->name << "\" has quadrature data but no summation" << std::endl;
+			exit(-1);
+		}
+		if (required < 0) {
+			std::cout << "symx error: MappedWorkspace \"" << this->name << "\" has invalid quadrature extent" << std::endl;
+			exit(-1);
+		}
+		for (const auto& map : this->iter_maps) {
+			if (map.stride <= 0 || map.first_symbol_idx < 0 || map.first_symbol_idx + static_cast<int64_t>(map.stride) > this->ws.get_n_symbols()
+			    || required > std::numeric_limits<int64_t>::max() / map.stride) {
+				std::cout << "symx error: MappedWorkspace \"" << this->name << "\" has invalid quadrature map metadata" << std::endl;
+				exit(-1);
+			}
+			const int64_t n_values = required * map.stride;
+			const int64_t available = map.n_values();
+			if (available != n_values || (n_values > 0 && !map.data())) {
+				std::cout << "symx error: MappedWorkspace \"" << this->name << "\" quadrature data has "
+				          << available << " values; expected " << n_values << std::endl;
+				exit(-1);
+			}
+		}
+	}
+
+	template<typename FLOAT>
+	inline bool MappedWorkspace<FLOAT>::has_iteration_map_with_id(const std::uintptr_t id) const
+	{
+		for (const auto& map : this->iter_maps) {
+			if (map.id() == id) { return true; }
+		}
+		return false;
+	}
 
     // ============================================================================
 	// Make constants
@@ -654,6 +902,11 @@ namespace symx
 
     template <typename FLOAT>
     inline const Workspace &MappedWorkspace<FLOAT>::get_workspace() const
+    {
+        return this->ws;
+    }
+    template <typename FLOAT>
+    inline Workspace& MappedWorkspace<FLOAT>::get_workspace()
     {
         return this->ws;
     }

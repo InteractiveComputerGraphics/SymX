@@ -62,5 +62,6 @@ namespace symx
 		/* Methods */
 		int32_t _find_or_add(const Expr& expr);
 		bool _are_same(const Expr& a, const Expr& b);
+		double _eval_rec(int32_t expr_id, std::vector<double>& memo, std::vector<uint8_t>& done) const;
 	};
 }

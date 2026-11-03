@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.1
+
+- Added factorized FEM kernels with exact derivatives for node-local position maps,
+  including rectangular deformation gradients for lines and membranes.
+- Added per-point quadrature data and variable-length summations per element.
+- Added symbolic substitution for scalars, vectors, and matrices.
+- Added per-potential energy and gradient breakdowns.
+- Direct LLT solves now build the sparse matrix directly from the blocked Hessian
+  and reuse its storage across solves.
+- Memoized expression evaluation over shared subexpressions.
+- `SYMX_ENABLE_MKL` now defaults to `AUTO` and uses oneMKL/PARDISO when found.
+- Added `SYMX_USE_SYSTEM_FMT` (default `OFF`); the bundled fmt is used unless enabled.
+- Updated bundled fmt to 12.2.0.
+- Added the "Advanced FEM and Integration" docs page and factorized FEM options
+  in the rubber extrusion example.
+
 ## 1.1.0
 
 - Added stencil-based differentiable simulation with adjoint gradients,
