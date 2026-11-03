@@ -21,11 +21,13 @@ Finally, the execution can occur.
 Because SymX has access to the DoF arrays (pointer and size), it can autonomously update their values in-place until the solution is reached.
 Multiple sets of degrees of freedom are allowed.
 
+For factorized FEM energies, mapped node positions, and integration data or point counts that vary by element, see [Advanced FEM and Integration](advanced_integration.md).
+
 ## Example
 We will build a 3D static elasticity solver using a FEM discretization for the Stable NeoHookean constitutive model and boundary conditions with the penalty method.
 The solver is compatible with the natively supported FEM element types SymX supports: `Tet3, Hex8, Tet10, Hex27`.
 Note that we use _Stable_ NeoHookean for the upcoming simulation examples for improved stability.
-A demo of solver can be found in [`rubber_extrusion.cpp`](../../examples/rubber_extrusion.cpp).
+The [rubber extrusion showcase](rubber-extrusion-example) provides a complete solver in [`rubber_extrusion.cpp`](../../examples/rubber_extrusion.cpp), with shared-rule, indexed-quadrature, and factorized FEM definitions.
 
 ```cpp
 struct Data
@@ -242,14 +244,14 @@ Brief descriptions:
 - `after_step`: Runs after every attempted Newton step, paired with `before_step` even when the step is rejected.
 - `is_initial_state_valid`: Exits the Newton process before it starts. Example: Element inversions in the rest pose.
 - `is_intermediate_state_valid`: Used to backtrack invalid states in the line search. Example: element inversions as a consequence of a step.
-- `on_intermediate_state_invalid`: Called when the invalid state could not be backtracked. Example: increase penalty stiffness.
-- `on_armijo_fail`: Called when Armijo backtracking fails. Example: restart the solve with a shorter time step size.
+- `on_intermediate_state_invalid`: Used if the invalid state could not be backtracked after the afforded number of iterations. Example: increase penalty stiffness.
+- `on_armijo_fail`: Analogous if Armijo's backtracking fails. Example: restart the solve with a shorter time step size.
 - `is_converged`: User's custom convergence criteria.
-- `is_converged_state_valid`: Checked right before returning success — lets the solver return non-success if the converged state is unacceptable. Example: tighten constraints before requesting a repeat solve.
-- `max_allowed_step`: Returns the maximum step length for the current iteration. Example: CCD.
+- `is_converged_state_valid`: Let Newton's Method return non-success right before return. Example: penalties are too soft, tighten them before requesting repeating the solve.
+- `max_allowed_step`: Allows the user to specify a max step for the current iteration. Example: CCD.
 
-Callbacks can be appended via the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
-`SolverCallbacks` can be accessed via `NewtonsMethod.callbacks`.
+Callbacks can be appended to those lists by using the corresponding `.add_<callback_name>(T f)` method, e.g. `.add_before_energy_evaluation(std::function<void()> f)`.
+`SolverCallbacks` can be accessed in `NewtonsMethod.callbacks`.
 
 Further, a custom residual can be specified by `.set_residual(std::function<double(const Eigen::VectorXd&)> f)`.
 

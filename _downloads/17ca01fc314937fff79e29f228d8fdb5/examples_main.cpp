@@ -106,7 +106,7 @@ int main()
         and logs.
     */
     if (run_all || run_rubber_extrusion_comparison) {
-        rubber_extrusion_comparison();
+        rubber_extrusion_comparison(RubberExtrusionMode::FactorizedFEM);
     }
     
     /*
@@ -118,20 +118,19 @@ int main()
     if (run_all || run_dynamic_elasticity_with_contact) {
         dynamic_elasticity_with_contact();
     }
-
     /*
-        cantilever_density_id_comparison()
+        cantilever_density_id()
 
         A cantilever beam is simulated with a NeoHookean material. The
         material density is optimized to match a target displacement.
         Showcases the use of the adjoint method for inverse simulation.
     */
     if (run_all || run_cantilever_density_id) {
-        cantilever_density_id_comparison();
+        cantilever_density_id(symx::FEM_Element::Hex8);
     }
 
     /*
-        cantilever_muscle_control_comparison()
+        cantilever_muscle_control()
 
         A cantilever beam is simulated with an active NeoHookean material.
         The muscle activation is optimized to match a target displacement
@@ -139,6 +138,7 @@ int main()
         simulation.
     */
     if (run_all || run_cantilever_muscle_control) {
-        cantilever_muscle_control_comparison();
+        const bool run_sequence = true;
+        cantilever_muscle_control(symx::FEM_Element::Hex8, run_sequence);
     }
 }

@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -344,7 +345,7 @@ Once the problem is defined, it is passed to <code class="docutils literal notra
 <section id="adding-potentials">
 <h3>Adding Potentials<a class="headerlink" href="#adding-potentials" title="Link to this heading">¶</a></h3>
 <p>Each potential <span class="math notranslate nohighlight">\(P_p\)</span> is added via <code class="docutils literal notranslate"><span class="pre">add_potential</span></code>, which takes a name, a connectivity array, and a definition callback.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">-&gt;</span><span class="nf">add_potential</span><span class="p">(</span><span class="s">&quot;new_potential&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">connectivity</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">-&gt;</span><span class="nf">add_potential</span><span class="p">(</span><span class="s">"new_potential"</span><span class="p">,</span><span class="w"> </span><span class="n">connectivity</span><span class="p">,</span>
 <span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="nc">Element</span><span class="o">&amp;</span><span class="w"> </span><span class="n">elem</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// ... define potential ...</span>
@@ -363,7 +364,7 @@ Multiple potentials can be added freely, and together they form <span class="mat
 For these, the user can return a <code class="docutils literal notranslate"><span class="pre">std::pair&lt;Scalar,</span> <span class="pre">Scalar&gt;</span></code> in the callback: the energy expression and a condition.
 When the condition evaluates to zero or below for a given element, that element contribution is skipped entirely.
 This is more efficient than using <code class="docutils literal notranslate"><span class="pre">branch</span></code> since we entirely avoid evaluating and assembling zero contributions.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">-&gt;</span><span class="nf">add_potential</span><span class="p">(</span><span class="s">&quot;new_potential_with_condition&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">connectivity</span><span class="p">,</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">G</span><span class="o">-&gt;</span><span class="nf">add_potential</span><span class="p">(</span><span class="s">"new_potential_with_condition"</span><span class="p">,</span><span class="w"> </span><span class="n">connectivity</span><span class="p">,</span>
 <span class="w">    </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="nc">MappedWorkspace</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="nc">Element</span><span class="o">&amp;</span><span class="w"> </span><span class="n">elem</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">// ... define potential and condition ...</span>
@@ -390,6 +391,22 @@ At any point the flat DoF vector can be read and written:</p>
 </div>
 <p>These operations are used internally at each Newton iteration, and they are accessible to the user.</p>
 </section>
+</section>
+<section id="energy-and-gradient-breakdown">
+<h2>Energy and gradient breakdown<a class="headerlink" href="#energy-and-gradient-breakdown" title="Link to this heading">¶</a></h2>
+<p>Both <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code> and <code class="docutils literal notranslate"><span class="pre">FirstOrderOptimizer</span></code> expose their compiled evaluator through
+<code class="docutils literal notranslate"><span class="pre">get_compiled()</span></code>. To inspect individual energy contributions at the current DoFs:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">compiled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">optimizer</span><span class="o">-&gt;</span><span class="nf">get_compiled</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">energies</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="o">-&gt;</span><span class="nf">evaluate_P_components</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">components</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">compiled</span><span class="o">-&gt;</span><span class="nf">evaluate_P__dP_du_components</span><span class="p">();</span>
+
+<span class="kt">double</span><span class="w"> </span><span class="n">energy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">components</span><span class="p">.</span><span class="n">energies</span><span class="p">.</span><span class="nf">at</span><span class="p">(</span><span class="s">"new_potential"</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="nc">Eigen</span><span class="o">::</span><span class="nc">VectorXd</span><span class="o">&amp;</span><span class="w"> </span><span class="n">gradient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">components</span><span class="p">.</span><span class="n">gradients</span><span class="p">.</span><span class="nf">at</span><span class="p">(</span><span class="s">"new_potential"</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Keys are the unique names passed to <code class="docutils literal notranslate"><span class="pre">add_potential()</span></code> or <code class="docutils literal notranslate"><span class="pre">add_potential_fem()</span></code>.
+Summing the component energies and gradients gives the results of
+<code class="docutils literal notranslate"><span class="pre">evaluate_P()</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_P__dP_du()</span></code>.</p>
 </section>
 </section>
 
@@ -459,6 +476,7 @@ At any point the flat DoF vector can be read and written:</p>
 <li><a class="reference internal" href="#degrees-of-freedom">Degrees of Freedom</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#energy-and-gradient-breakdown">Energy and gradient breakdown</a></li>
 </ul>
 </li>
 </ul>

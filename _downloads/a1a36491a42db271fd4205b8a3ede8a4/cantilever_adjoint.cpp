@@ -1,6 +1,7 @@
 #include "examples_main.h"
 
 #include <fmt/format.h>
+#include <algorithm>
 #include <filesystem>
 #include <map>
 #include <cmath>
@@ -317,18 +318,10 @@ void cantilever_density_id(FEM_Element fem_element_type)
     vtk_file.write(fmt::format("{}/cantilever_id_opt_sim_{}.vtk", output_folder, get_name(mesh.element_type)));
 }
 
-void cantilever_density_id_comparison()
-{
-    std::cout << "\n================ cantilever_density_id_comparison() ================" << std::endl;
-
-    cantilever_density_id(FEM_Element::Tet4);
-    cantilever_density_id(FEM_Element::Hex8);
-}
-
 // =============================================================================
 //  2.  Muscle (active spring) control
 // =============================================================================
-void cantilever_muscle_control(FEM_Element fem_element_type)
+void cantilever_muscle_control(FEM_Element fem_element_type, bool run_sequence)
 {
     std::cout << "\n\n==============================================================================" << std::endl;
     std::cout << "Muscle control" << std::endl;
@@ -356,9 +349,9 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
 
         // Inverse
         LabelledConnectivity<1> tip_conn {{"vertex_idx"}};
-        Eigen::Vector3d x_tip_target = {0.0, 0.5, 0.5};
+        // Match the first target on the optional circular sequence.
+        Eigen::Vector3d x_tip_target = {0.50, 0.40, 0.00};
         double tip_target_weight = 1.0;
-        bool run_sequence = false;
     } data;
 
     // ----------------------------------------------------------------------
@@ -501,7 +494,11 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
     prepare_for_export(output_conn, mesh.element_type);
 
     // Solve
-    newton->solve();
+    const SolverReturn forward_result = newton->solve();
+    if (forward_result != SolverReturn::Successful) {
+        throw std::runtime_error(fmt::format(
+            "Muscle-control forward solve failed: {}.", to_string(forward_result)));
+    }
 
     // Write VTKs
     vtkio::VTKFile vtk_file;
@@ -601,10 +598,14 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
     // Solve
     {
         const double t0 = omp_get_wtime();
-        SolverReturn ret = opt->solve();
+        const SolverReturn result = opt->solve();
         const double t1 = omp_get_wtime();
         opt->print_summary();
         std::cout << "Runtime: " << t1 - t0 << " s." << std::endl;
+        if (result != SolverReturn::Successful) {
+            throw std::runtime_error(fmt::format(
+                "Muscle-control inverse solve failed: {}.", to_string(result)));
+        }
     }
 
     // Output
@@ -627,26 +628,31 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
     // ----------------------------------------------------------------------
     // Inverse problem (sequence)
     // ----------------------------------------------------------------------
-    if (!data.run_sequence) return;
+    if (!run_sequence) return;
 
     std::cout << "\n\n==============================================================================" << std::endl;
     std::cout << "Muscle control - sequence" << std::endl;
     std::cout << "==============================================================================" << std::endl;
     opt->settings.residual_tolerance_abs = 1e-5;
     opt->settings.lbfgs.bootstrap_step_length = 0.01;
-    const Eigen::Vector3d trajectory_aabb_bottom = { 0.0, -0.5, -0.5 };
-    const Eigen::Vector3d trajectory_aabb_top    = { 0.5,  0.5,  0.5 };
+    // The beam points along +X and its undeformed tip is at x = 0.5.  Move
+    // only in the perpendicular YZ plane, so the target asks for bending
+    // rather than the large longitudinal stretch seen in the previous path.
+    constexpr double target_x = 0.50;
+    constexpr double target_circle_radius = 0.4;
 
-    // Generate a smooth 3D Lissajous trajectory (1:2:3 frequency ratios).
-    const int n_frames = 360;
+    // One complete, uniformly sampled circle. The final frame is one sample
+    // before frame 0, so the sequence loops with a uniform step.
+    const int n_frames = 120;
+    const double pi = std::acos(-1.0);
     std::vector<Eigen::Vector3d> targets;
     targets.reserve(n_frames);
     for (int i = 0; i < n_frames; ++i) {
-        const double t = 2.0 * M_PI * i / (double)n_frames;
+        const double t = 2.0 * pi * i / (double)n_frames;
         targets.push_back({
-            trajectory_aabb_bottom.x() + (trajectory_aabb_top.x() - trajectory_aabb_bottom.x()) * 0.5 * (1.0 + std::cos(t)),  // x
-            trajectory_aabb_bottom.y() + (trajectory_aabb_top.y() - trajectory_aabb_bottom.y()) * 0.5 * (1.0 + std::sin(2.0 * t)),  // y
-            trajectory_aabb_bottom.z() + (trajectory_aabb_top.z() - trajectory_aabb_bottom.z()) * 0.5 * (1.0 + std::sin(3.0 * t))   // z
+            target_x,
+            target_circle_radius * std::cos(t),
+            target_circle_radius * std::sin(t)
         });
     }
 
@@ -654,38 +660,22 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
     std::string seq_folder = output_folder + "/seq";
     std::filesystem::create_directories(seq_folder);
 
-    // Pre-write all target positions as small octahedral spheres so the
-    // trajectory can be inspected in a viewer even if the sim loop hangs.
+    // Write one target marker for each frame. Padded numbering lets ParaView
+    // load the files in sequence order.
     {
-        const double target_sphere_radius = 0.05;
-
-        // Octahedron: 6 vertices at ±r along each axis, 8 triangular faces.
-        // VTK_TRIANGLE = 5.
-        const std::vector<int> sphere_conn = {
-            0, 2, 4,  0, 4, 3,  0, 3, 5,  0, 5, 2,
-            1, 4, 2,  1, 3, 4,  1, 5, 3,  1, 2, 5
-        };
-        vtkio::VTKFile target_vtk;
-        target_vtk.set_cells_from_indexable(sphere_conn, 3, vtkio::CellType::Triangle);
-
-        std::vector<Eigen::Vector3d> sphere_verts(6);
         std::cout << "Writing " << n_frames << " target VTKs..." << std::endl;
         for (int frame = 0; frame < n_frames; ++frame) {
-            const Eigen::Vector3d& c = targets[frame];
-            sphere_verts[0] = c + Eigen::Vector3d( target_sphere_radius, 0, 0);
-            sphere_verts[1] = c + Eigen::Vector3d(-target_sphere_radius, 0, 0);
-            sphere_verts[2] = c + Eigen::Vector3d(0,  target_sphere_radius, 0);
-            sphere_verts[3] = c + Eigen::Vector3d(0, -target_sphere_radius, 0);
-            sphere_verts[4] = c + Eigen::Vector3d(0, 0,  target_sphere_radius);
-            sphere_verts[5] = c + Eigen::Vector3d(0, 0, -target_sphere_radius);
-            target_vtk.set_points_from_twice_indexable(sphere_verts);
-            target_vtk.write(fmt::format("{}/cantilever_target_{}.vtk", seq_folder, frame));
+            write_cube_mesh(
+                fmt::format("{}/cantilever_target_{:04d}.vtk", seq_folder, frame),
+                targets[frame], 0.04);
         }
         std::cout << "Target VTKs written." << std::endl;
     }
 
-    // Reduce verbosity for the long loop ?
-    context->output->set_enabled(true);
+    // The optimizer's per-iteration trace is useful for the one-frame
+    // example above, but overwhelms a 120-frame animation. Keep only the
+    // concise progress line below while preserving errors as exceptions.
+    context->output->set_enabled(false);
 
     // Reset state to rest for the first frame (warm-start carries forward
     // between frames after that)
@@ -697,12 +687,17 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
 
     for (int frame = 0; frame < n_frames; ++frame) {
         data.x_tip_target = targets[frame];
-        opt->solve();
+        const SolverReturn result = opt->solve();
+        if (result != SolverReturn::Successful) {
+            throw std::runtime_error(fmt::format(
+                "Muscle-control sequence failed at frame {}: {}.",
+                frame, to_string(result)));
+        }
 
         // Write per-frame VTK
         vtk_file.set_points_from_twice_indexable(data.x);
         vtk_file.set_point_data_from_indexable("muscle_strain", get_vertex_strains(), vtkio::AttributeType::Scalars);
-        vtk_file.write(fmt::format("{}/cantilever_muscle_seq_{}.vtk", seq_folder, frame));
+        vtk_file.write(fmt::format("{}/cantilever_muscle_seq_{:04d}.vtk", seq_folder, frame));
 
         // Progress report every 10 frames
         if ((frame + 1) % 10 == 0 || frame == 0) {
@@ -721,12 +716,4 @@ void cantilever_muscle_control(FEM_Element fem_element_type)
     std::cout << fmt::format("Sequence done: {} frames in {:.1f}s ({:.2f}s/frame)",
         n_frames, t_seq_total, t_seq_total / n_frames) << std::endl;
     std::cout << "Output: " << seq_folder << std::endl;
-}
-
-void cantilever_muscle_control_comparison()
-{
-    std::cout << "\n============= cantilever_muscle_control_comparison() =============" << std::endl;
-
-    cantilever_muscle_control(FEM_Element::Tet4);
-    cantilever_muscle_control(FEM_Element::Hex8);
 }

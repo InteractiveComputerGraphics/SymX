@@ -61,6 +61,7 @@ global_optimization
 fem_integration
 newtons_method
 first_order_optimization
+advanced_integration
 ```
 
 ```{toctree}

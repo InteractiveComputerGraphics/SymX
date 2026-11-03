@@ -218,6 +218,7 @@
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -364,7 +365,8 @@ SymX’s provides the standard rules for the aforementioned supported 3D element
 </div>
 <p>As described in <a class="reference internal" href="symbol_data_maps.html"><span class="std std-doc">Symbol-Data Maps</span></a>, <code class="docutils literal notranslate"><span class="pre">MappedWorkspace</span></code> provides <em>summation</em> facilities that allows for easy and efficient implementation of numerical integration.
 Note that SymX’s summation is also <em>symbolic</em> and <strong>not</strong> unrolled, which would explode the number of operations.
-Differentiation is efficiently handled as a summation.</p>
+Differentiation is efficiently handled as a summation.
+For element-specific integration-point data, variable point counts, and factorized FEM energies with mapped node positions, see <a class="reference internal" href="advanced_integration.html"><span class="std std-doc">Advanced FEM and Integration</span></a>.</p>
 </section>
 <section id="fem-integrator">
 <h2>FEM Integrator<a class="headerlink" href="#fem-integrator" title="Link to this heading">¶</a></h2>
@@ -384,7 +386,8 @@ Differentiation is efficiently handled as a summation.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>With this, the user only needs to indicate the element type and what to do with the integration point.</p>
+<p>With this, the user only needs to indicate the element type and what to do with the integration point.
+The <a class="reference internal" href="examples.html#rubber-extrusion-example"><span class="std std-ref">rubber extrusion showcase</span></a> includes a complete implementation using this integrator alongside indexed-quadrature and factorized FEM alternatives.</p>
 </section>
 <section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>

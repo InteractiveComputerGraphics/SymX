@@ -10,8 +10,17 @@
 using namespace symx;
 
 
-void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double poissons_ratio, double extrusion_factor)
+void rubber_extrusion(FEM_Element fem_element_type, RubberExtrusionMode mode, int refinement_level, double poissons_ratio, double extrusion_factor)
 {
+    if (mode != RubberExtrusionMode::StandardFixedSummation &&
+        mode != RubberExtrusionMode::StandardIndexedSummation &&
+        mode != RubberExtrusionMode::FactorizedFEM) {
+        std::cout << "symx error: rubber_extrusion() got an unknown mode." << std::endl;
+        exit(-1);
+    }
+    const std::string mode_name = mode == RubberExtrusionMode::StandardFixedSummation ? "fixed"
+        : mode == RubberExtrusionMode::StandardIndexedSummation ? "indexed" : "factorized";
+
     struct Data
     {
         double youngs_modulus = 1e6;
@@ -20,6 +29,7 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
 
         std::vector<Eigen::Vector3d> x; // Current positions
         std::vector<Eigen::Vector3d> X; // Rest positions
+        std::vector<std::array<double, 4>> integration_points; // [element][QP]: {weight, xi0, xi1, xi2}
         LabelledConnectivity<2> bc_connectivity{{ "constraint_idx", "vertex_idx" }};
         std::vector<Eigen::Vector3d> bc_target_positions;
     } data;
@@ -33,6 +43,7 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
     std::cout << "\n\n==============================================================================" << std::endl;
     std::cout << "==============================================================================" << std::endl;
     std::cout << "> Element type: " << get_name(mesh.element_type) << std::endl;
+    std::cout << "> Integration mode: " << mode_name << std::endl;
     std::cout << "> Number of elements: " << mesh.n_elements << std::endl;
     std::cout << "> Number of vertices: " << mesh.vertices.size() << std::endl;
 
@@ -40,6 +51,17 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
     data.x = mesh.vertices;
     data.X = mesh.vertices;
     data.poissons_ratio = poissons_ratio;
+    const auto integration_rule = get_integration_rule(mesh.element_type);
+    const size_t n_integration_points = integration_rule.size();
+    if (mode == RubberExtrusionMode::StandardIndexedSummation) {
+        // The indexable path stores one contiguous copy of the fixed rule per element.
+        data.integration_points.resize(static_cast<size_t>(mesh.n_elements) * n_integration_points);
+        for (int elem_i = 0; elem_i < mesh.n_elements; elem_i++) {
+            for (size_t point_i = 0; point_i < n_integration_points; point_i++) {
+                data.integration_points[static_cast<size_t>(elem_i) * n_integration_points + point_i] = integration_rule[point_i];
+            }
+        }
+    }
 
     // Set initial guess: affine expansion in extrusion (x) direction
     // Center of block in x is assumed to be 0 (as in mesh generation)
@@ -68,28 +90,88 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
     spGlobalPotential G = GlobalPotential::create();
 
     // Stable Neo-Hookean material energy (generic on FEM element type)
-	G->add_potential("stable_neo_hookean_" + get_name(mesh.element_type), mesh.connectivity, mesh.connectivity_stride,
-		[&](MappedWorkspace<double>& mws, Element& elem)
-		{
-            // Create symbols from data
-            std::vector<Vector> x = mws.make_vectors(data.x, elem);
-            std::vector<Vector> X = mws.make_vectors(data.X, elem);
-            Scalar E = mws.make_scalar(data.youngs_modulus);
-            Scalar nu = mws.make_scalar(data.poissons_ratio);
+    if (mode == RubberExtrusionMode::FactorizedFEM) {
+        G->add_potential_fem("stable_neo_hookean_factorized_" + get_name(mesh.element_type),
+            mesh.connectivity, mesh.connectivity_stride,
+            [&](MappedWorkspace<double>& mws, Element& elem)
+            {
+                std::vector<Vector> x = mws.make_vectors(data.x, elem);
+                std::vector<Vector> X = mws.make_vectors(data.X, elem);
+                Scalar E = mws.make_scalar(data.youngs_modulus);
+                Scalar nu = mws.make_scalar(data.poissons_ratio);
 
-            // Define potential
-            Scalar P = fem_integrator(mws, mesh.element_type,
-				[&](Scalar& w, Vector xi)
-				{
-					Matrix Jx = fem_jacobian(mesh.element_type, x, xi);
-					Matrix JX = fem_jacobian(mesh.element_type, X, xi);
-					Matrix F = Jx * JX.inv();
-					return stable_neohookean_energy_density(F, E, nu) * JX.det() * w;
-				}
-            );
-            return P;
-		}
-	);
+                // Mapped physical positions
+                Matrix x_m(collect_scalars(x), {(int)x.size(), 3});
+
+                // Summation
+                return mws.add_for_each(integration_rule, [&](Vector& ip) {
+                    Scalar w = ip[0];
+                    Vector xi({ip[1], ip[2], ip[3]});
+
+                    Matrix JX = fem_jacobian(mesh.element_type, X, xi);
+                    Matrix B = fem_deformation_gradient_B(mesh.element_type, xi, JX);
+
+                    // Material lambda
+                    auto psi = [=](const Matrix& F) {
+                        return stable_neohookean_energy_density(F, E, nu) * JX.det() * w;
+                    };
+
+                    // Return the split FEM energy potential
+                    return FemEnergySplit{ x_m, B, psi };
+                });
+            }
+        );
+    }
+    else if (mode == RubberExtrusionMode::StandardFixedSummation) {
+        G->add_potential("stable_neo_hookean_fixed_" + get_name(mesh.element_type), mesh.connectivity, mesh.connectivity_stride,
+            [&](MappedWorkspace<double>& mws, Element& elem)
+            {
+                // Create symbols from data
+                std::vector<Vector> x = mws.make_vectors(data.x, elem);
+                std::vector<Vector> X = mws.make_vectors(data.X, elem);
+                Scalar E = mws.make_scalar(data.youngs_modulus);
+                Scalar nu = mws.make_scalar(data.poissons_ratio);
+
+                Scalar P = fem_integrator(mws, mesh.element_type,
+                    [&](Scalar& w, Vector& xi)
+                    {
+                        Matrix Jx = fem_jacobian(mesh.element_type, x, xi);
+                        Matrix JX = fem_jacobian(mesh.element_type, X, xi);
+                        Matrix F = Jx * JX.inv();
+                        return stable_neohookean_energy_density(F, E, nu) * JX.det() * w;
+                    }
+                );
+                return P;
+            }
+        );
+    }
+    else if (mode == RubberExtrusionMode::StandardIndexedSummation) {
+        G->add_potential("stable_neo_hookean_indexable_qp_" + get_name(mesh.element_type), mesh.connectivity, mesh.connectivity_stride,
+            [&](MappedWorkspace<double>& mws, Element& elem)
+            {
+                // Create symbols from data
+                std::vector<Vector> x = mws.make_vectors(data.x, elem);
+                std::vector<Vector> X = mws.make_vectors(data.X, elem);
+                Scalar E = mws.make_scalar(data.youngs_modulus);
+                Scalar nu = mws.make_scalar(data.poissons_ratio);
+
+                // The summation count selects the QP row width; values come from integration_points.
+                Scalar P = mws.add_for_each(static_cast<int32_t>(n_integration_points),
+                    [&]()
+                    {
+                        Vector ip = mws.make_quadrature_vector(data.integration_points);
+                        Scalar w = ip[0];
+                        Vector xi({ip[1], ip[2], ip[3]});
+                        Matrix Jx = fem_jacobian(mesh.element_type, x, xi);
+                        Matrix JX = fem_jacobian(mesh.element_type, X, xi);
+                        Matrix F = Jx * JX.inv();
+                        return stable_neohookean_energy_density(F, E, nu) * JX.det() * w;
+                    }
+                );
+                return P;
+            }
+        );
+    }
 
     // Boundary conditions energy
     G->add_potential("boundary_conditions", data.bc_connectivity,
@@ -114,7 +196,7 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
     context->compilation_directory = symx::get_codegen_dir();
     std::string output_folder = std::string(SYMX_EXAMPLES_OUTPUT_DIR) + "/rubber_extrusion";
     std::filesystem::create_directories(output_folder);
-    context->output->open_file(fmt::format("{}/rubber_extrusion_{}.log", output_folder, get_name(mesh.element_type)));
+    context->output->open_file(fmt::format("{}/rubber_extrusion_{}_{}.log", output_folder, get_name(mesh.element_type), mode_name));
     
     // Newton Solver
     NewtonsMethod newton(G, context);  // Compilation occurs here
@@ -136,7 +218,7 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
             vtkio::VTKFile vtk_file;
             vtk_file.set_points_from_twice_indexable(data.x);
             vtk_file.set_cells_from_indexable(output_conn, mesh.connectivity_stride, fem_element_to_vtk_cell_type(mesh.element_type));
-            vtk_file.write(fmt::format("{}/rubber_extrusion_{}.vtk", output_folder, get_name(mesh.element_type)));
+            vtk_file.write(fmt::format("{}/rubber_extrusion_{}_{}.vtk", output_folder, get_name(mesh.element_type), mode_name));
 
             return true;
         }
@@ -150,14 +232,14 @@ void rubber_extrusion(FEM_Element fem_element_type, int refinement_level, double
     newton.print_summary(runtime);
 
     // Write yaml log
-    context->logger->save_to_disk(fmt::format("{}/rubber_extrusion_{}.yaml", output_folder, get_name(mesh.element_type)));
+    context->logger->save_to_disk(fmt::format("{}/rubber_extrusion_{}_{}.yaml", output_folder, get_name(mesh.element_type), mode_name));
 }
-void rubber_extrusion_comparison(int refinement_level, double poissons_ratio, double extrusion_factor)
+void rubber_extrusion_comparison(RubberExtrusionMode mode, int refinement_level, double poissons_ratio, double extrusion_factor)
 {
     std::cout << "\n=================== rubber_extrusion_comparison() ===================" << std::endl;
 
-    // rubber_extrusion(FEM_Element::Tet4, refinement_level, poissons_ratio, extrusion_factor);
-    rubber_extrusion(FEM_Element::Hex8, refinement_level, poissons_ratio, extrusion_factor);
-    // rubber_extrusion(FEM_Element::Tet10, refinement_level/2, poissons_ratio, extrusion_factor);
-    // rubber_extrusion(FEM_Element::Hex27, refinement_level/2, poissons_ratio, extrusion_factor);
+    rubber_extrusion(FEM_Element::Tet4, mode, refinement_level, poissons_ratio, extrusion_factor);
+    rubber_extrusion(FEM_Element::Hex8, mode, refinement_level, poissons_ratio, extrusion_factor);
+    rubber_extrusion(FEM_Element::Tet10, mode, refinement_level/2, poissons_ratio, extrusion_factor);
+    rubber_extrusion(FEM_Element::Hex27, mode, refinement_level/2, poissons_ratio, extrusion_factor);
 }

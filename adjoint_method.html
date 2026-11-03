@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Inverse Simulation" href="inverse_simulation.html"><link rel="prev" title="First-order optimization" href="first_order_optimization.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Inverse Simulation" href="inverse_simulation.html"><link rel="prev" title="Advanced FEM and Integration" href="advanced_integration.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul class="current">
@@ -324,7 +325,7 @@ Both potentials use the same mapped-stencil declarations, so a loss can naturall
 
 <span class="nc">spGlobalPotential</span><span class="w"> </span><span class="n">loss</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">GlobalPotential</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
 <span class="c1">// loss-&gt;add_potential(...);      // defines L(u, p)</span>
-<span class="n">loss</span><span class="o">-&gt;</span><span class="nf">add_dof</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;parameters&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// p</span>
+<span class="n">loss</span><span class="o">-&gt;</span><span class="nf">add_dof</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span><span class="w"> </span><span class="s">"parameters"</span><span class="p">);</span><span class="w">  </span><span class="c1">// p</span>
 
 <span class="n">LinearSolveSettings</span><span class="w"> </span><span class="n">adjoint_linear</span><span class="p">;</span>
 <span class="n">adjoint_linear</span><span class="p">.</span><span class="n">linear_solver</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">LinearSolver</span><span class="o">::</span><span class="n">DirectLLT</span><span class="p">;</span>
@@ -391,14 +392,14 @@ Indices address the flattened vector of all loss DoF sets and are validated by t
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="first_order_optimization.html">
+          <a class="prev-page" href="advanced_integration.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">First-order optimization</div>
+                <div class="title">Advanced FEM and Integration</div>
                 
               </div>
             </a>

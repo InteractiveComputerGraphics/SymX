@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -290,7 +291,7 @@ We will use SymX to calculate the area of a triangle mesh.</p>
 
 <span class="c1">// Compilation</span>
 <span class="k">const</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="nc">string</span><span class="w"> </span><span class="n">codegen_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">get_codegen_dir</span><span class="p">();</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CompiledInLoop</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;tri_area&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CompiledInLoop</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">"tri_area"</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">);</span>
 
 <span class="c1">// Evaluation</span>
 <span class="kt">double</span><span class="w"> </span><span class="n">total_area</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
@@ -303,7 +304,7 @@ We will use SymX to calculate the area of a triangle mesh.</p>
 <span class="p">);</span>
 
 <span class="c1">// Print</span>
-<span class="nc">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Total triangle mesh area: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">total_area</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="nc">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Total triangle mesh area: "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">total_area</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
 </pre></div>
 </div>
 </section>
@@ -336,13 +337,13 @@ The user will still interface through <code class="docutils literal notranslate"
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">CompiledInLoop</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="w"> </span><span class="n">loop</span><span class="p">;</span>
 
 <span class="c1">// Forces compilation</span>
-<span class="n">loop</span><span class="p">.</span><span class="nf">compile</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;tri_area&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="n">loop</span><span class="p">.</span><span class="nf">compile</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">"tri_area"</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
 
 <span class="c1">// Try loading</span>
-<span class="kt">bool</span><span class="w"> </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loop</span><span class="p">.</span><span class="nf">load_if_cached</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;tri_area&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="kt">bool</span><span class="w"> </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">loop</span><span class="p">.</span><span class="nf">load_if_cached</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="s">"tri_area"</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
 
 <span class="c1">// Try loading otherwise compile (this is the default constructor)</span>
-<span class="n">loop</span><span class="p">.</span><span class="nf">try_load_otherwise_compile</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;tri_area&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
+<span class="n">loop</span><span class="p">.</span><span class="nf">try_load_otherwise_compile</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">area</span><span class="p">},</span><span class="w"> </span><span class="s">"tri_area"</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">,</span><span class="w"> </span><span class="n">checksum</span><span class="p">);</span>
 </pre></div>
 </div>
 </section>
@@ -462,7 +463,7 @@ If <code class="docutils literal notranslate"><span class="pre">is_element_activ
 <span class="nc">std</span><span class="o">::</span><span class="nc">vector</span><span class="o">&lt;</span><span class="nc">Scalar</span><span class="o">&gt;</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">value_gradient_hessian</span><span class="p">(</span><span class="n">E</span><span class="p">,</span><span class="w"> </span><span class="n">dofs</span><span class="p">);</span><span class="w">  </span><span class="c1">// size: 157</span>
 
 <span class="c1">// Compile</span>
-<span class="k">auto</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CompiledInLoop</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NH_E_grad_hess&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">loop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">CompiledInLoop</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;::</span><span class="nf">create</span><span class="p">(</span><span class="n">mws</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="s">"NH_E_grad_hess"</span><span class="p">,</span><span class="w"> </span><span class="n">codegen_dir</span><span class="p">);</span>
 
 <span class="c1">// Evaluation loop</span>
 <span class="n">loop</span><span class="o">-&gt;</span><span class="nf">run</span><span class="p">(</span><span class="n">n_threads</span><span class="p">,</span><span class="w"> </span>

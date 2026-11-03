@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -312,6 +313,8 @@ cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"
 cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--parallel<span class="w">                     </span><span class="c1"># All</span>
 </pre></div>
 </div>
+<p>Build parallelism uses the native build tool’s default. To limit it, pass
+<code class="docutils literal notranslate"><span class="pre">--parallel</span> <span class="pre">N</span></code>, or omit <code class="docutils literal notranslate"><span class="pre">--parallel</span></code> and set <code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_PARALLEL_LEVEL</span></code>.</p>
 <p>Run</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>build/tests/tests<span class="w">         </span><span class="c1"># Tests</span>
 build/examples/examples<span class="w">   </span><span class="c1"># Examples</span>
@@ -346,20 +349,27 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 <td><p>Hessian storage precision (<code class="docutils literal notranslate"><span class="pre">float</span></code> or <code class="docutils literal notranslate"><span class="pre">double</span></code>)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_MKL</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">OFF</span></code></p></td>
-<td><p>Use oneMKL/PARDISO for direct sparse LLT solves</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">AUTO</span></code></p></td>
+<td><p>Use oneMKL/PARDISO for direct sparse LLT solves when available (<code class="docutils literal notranslate"><span class="pre">AUTO</span></code> / <code class="docutils literal notranslate"><span class="pre">ON</span></code> / <code class="docutils literal notranslate"><span class="pre">OFF</span></code>)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_MKL_DIR</span></code></p></td>
 <td><p><em>(empty)</em></p></td>
-<td><p>Optional directory containing <code class="docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code></p></td>
+<td><p>Optional directory containing <code class="docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code> (compatibility hint; <code class="docutils literal notranslate"><span class="pre">MKL_DIR</span></code> is also supported)</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_STACK_SIZE</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_USE_SYSTEM_FMT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">OFF</span></code></p></td>
+<td><p>Search for an installed fmt; otherwise use the bundled copy. An existing <code class="docutils literal notranslate"><span class="pre">fmt::fmt</span></code> target always takes precedence</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SYMX_STACK_SIZE</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">10480000</span></code></p></td>
 <td><p>Linker stack reservation for generated expressions</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>SymX defaults to bundled fmt to avoid accidentally linking a shared library
+from an unrelated environment such as Conda. Use <code class="docutils literal notranslate"><span class="pre">-DSYMX_USE_SYSTEM_FMT=ON</span></code>
+to allow installed fmt packages, or supply a <code class="docutils literal notranslate"><span class="pre">fmt::fmt</span></code> target from a parent project.</p>
 <section id="avx2-support">
 <h3>AVX2 support<a class="headerlink" href="#avx2-support" title="Link to this heading">¶</a></h3>
 <p>SymX uses AVX2 to speedup computations in several locations, such as evaluation and linear system solves.
@@ -367,7 +377,7 @@ build/examples/examples<span class="w">   </span><span class="c1"># Examples</sp
 <code class="docutils literal notranslate"><span class="pre">AUTO</span></code> enables AVX2 on x86/x86_64/AMD64 and disables it everywhere else (e.g. Apple Silicon).
 Override explicitly with <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_AVX2=ON</span></code> or <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_AVX2=OFF</span></code>.</p>
 <p>If you try to compile on a non-AVX2 system with <code class="docutils literal notranslate"><span class="pre">ON</span></code>, you will get something like:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>../immintrin.h:14<span class="w"> </span>error<span class="w"> </span><span class="s2">&quot;This header is only meant to be used on x86 and x64 architecture&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>../immintrin.h:14<span class="w"> </span>error<span class="w"> </span><span class="s2">"This header is only meant to be used on x86 and x64 architecture"</span>
 </pre></div>
 </div>
 </section>
@@ -378,11 +388,36 @@ Importantly, all <em>operations</em> are still performed in <code class="docutil
 This option simply quantizes the global matrix values to <code class="docutils literal notranslate"><span class="pre">float</span></code>, halving memory traffic and significantly increasing performance.
 The default remains <code class="docutils literal notranslate"><span class="pre">double</span></code> as very numerically stiff problems might require it, but the user is encouraged to assess whether <code class="docutils literal notranslate"><span class="pre">float</span></code> works for their application.</p>
 </section>
-<section id="mkl-and-stack-size">
-<h3>MKL and stack size<a class="headerlink" href="#mkl-and-stack-size" title="Link to this heading">¶</a></h3>
-<p>Set <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_MKL=ON</span></code> to use Eigen’s PARDISO path through oneMKL. If
-CMake cannot discover oneMKL itself, set <code class="docutils literal notranslate"><span class="pre">-DSYMX_MKL_DIR</span></code> to the directory
-containing <code class="docutils literal notranslate"><span class="pre">MKLConfig.cmake</span></code>. MKL remains optional and off by default.</p>
+<section id="mkl">
+<h3>MKL<a class="headerlink" href="#mkl" title="Link to this heading">¶</a></h3>
+<p>With the default <code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_MKL=AUTO</span></code>, SymX uses Eigen’s PARDISO path when
+oneMKL is available and otherwise uses Eigen’s built-in solvers. CMake
+searches its normal package paths, an existing <code class="docutils literal notranslate"><span class="pre">MKL::MKL</span></code> target supplied by a
+parent project, <code class="docutils literal notranslate"><span class="pre">SYMX_MKL_DIR</span></code>, <code class="docutils literal notranslate"><span class="pre">MKLROOT</span></code> and <code class="docutils literal notranslate"><span class="pre">ONEAPI_ROOT</span></code>, and common oneAPI
+installation directories (including versioned installations). SymX does not
+ship with a copy of MKL and will not download it.</p>
+<p>For a standard Intel oneAPI installation on Linux, no environment setup is
+needed before configuring:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build
+cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--parallel
+ctest<span class="w"> </span>--test-dir<span class="w"> </span>build<span class="w"> </span>--output-on-failure
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_MKL=ON</span></code> to require MKL and fail configuration if it cannot
+be found, or <code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_MKL=OFF</span></code> to use Eigen’s solver even when MKL is
+installed. For a nonstandard installation, pass a CMake package path or
+installation root:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DMKL_DIR<span class="o">=</span>/path/to/mkl/lib/cmake/mkl
+<span class="c1"># Or:</span>
+cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_PREFIX_PATH<span class="o">=</span>/path/to/mkl
+</pre></div>
+</div>
+<p>An existing build directory keeps its cached <code class="docutils literal notranslate"><span class="pre">SYMX_ENABLE_MKL</span></code> value. Pass
+<code class="docutils literal notranslate"><span class="pre">-DSYMX_ENABLE_MKL=AUTO</span></code> to enable automatic discovery in a build previously
+configured with MKL disabled.</p>
+</section>
+<section id="stack-size">
+<h3>Stack size<a class="headerlink" href="#stack-size" title="Link to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">SYMX_STACK_SIZE</span></code> controls the linker stack reservation. Increase it only for
 exceptionally large generated expressions that exhaust the platform default.</p>
 </section>
@@ -395,7 +430,7 @@ You can manually specify the compiler in two ways, via CMake:</p>
 </pre></div>
 </div>
 <p>or at runtime:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">symx</span><span class="o">::</span><span class="nf">set_compiler_path</span><span class="p">(</span><span class="s">&quot;/usr/bin/g++-13&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">symx</span><span class="o">::</span><span class="nf">set_compiler_path</span><span class="p">(</span><span class="s">"/usr/bin/g++-13"</span><span class="p">);</span>
 </pre></div>
 </div>
 <section id="linux-macos">
@@ -410,13 +445,13 @@ Most likely, it will need to know where <code class="docutils literal notranslat
 If that fails (or it cannot find it), it will check for <code class="docutils literal notranslate"><span class="pre">vcvars64.bat</span></code> in specific common places.
 If that also fails, it will print a message saying so.</p>
 <p>For reference, common locations are:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;C:\\Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat&quot;</span>
-<span class="s2">&quot;C:\\Program Files (x86)/Microsoft Visual Studio/2022/Professional/VC/Auxiliary/Build/vcvarsall.bat&quot;</span>
-<span class="s2">&quot;C:\\Program Files/Microsoft Visual Studio/18/BuildTools/VC/Auxiliary/Build/vcvars64.bat&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="s2">"C:\\Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Auxiliary/Build/vcvars64.bat"</span>
+<span class="s2">"C:\\Program Files (x86)/Microsoft Visual Studio/2022/Professional/VC/Auxiliary/Build/vcvarsall.bat"</span>
+<span class="s2">"C:\\Program Files/Microsoft Visual Studio/18/BuildTools/VC/Auxiliary/Build/vcvars64.bat"</span>
 </pre></div>
 </div>
 <p>Make sure you specify the path correctly as string if you use the runtime option:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">symx</span><span class="o">::</span><span class="nf">set_compiler_path</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">C:</span><span class="se">\\</span><span class="s">Program Files</span><span class="se">\\</span><span class="s">Microsoft Visual Studio</span><span class="se">\\</span><span class="s">18</span><span class="se">\\</span><span class="s">BuildTools</span><span class="se">\\</span><span class="s">VC</span><span class="se">\\</span><span class="s">Auxiliary</span><span class="se">\\</span><span class="s">Build</span><span class="se">\\</span><span class="s">vcvars64.bat</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p">);</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">symx</span><span class="o">::</span><span class="nf">set_compiler_path</span><span class="p">(</span><span class="s">"</span><span class="se">\"</span><span class="s">C:</span><span class="se">\\</span><span class="s">Program Files</span><span class="se">\\</span><span class="s">Microsoft Visual Studio</span><span class="se">\\</span><span class="s">18</span><span class="se">\\</span><span class="s">BuildTools</span><span class="se">\\</span><span class="s">VC</span><span class="se">\\</span><span class="s">Auxiliary</span><span class="se">\\</span><span class="s">Build</span><span class="se">\\</span><span class="s">vcvars64.bat</span><span class="se">\"</span><span class="s">"</span><span class="p">);</span>
 </pre></div>
 </div>
 <p><strong>Important:</strong> The architecture must match your application.
@@ -543,7 +578,8 @@ Enable it to see the raw compiler output:</p>
 <li><a class="reference internal" href="#cmake-options">CMake options</a><ul>
 <li><a class="reference internal" href="#avx2-support">AVX2 support</a></li>
 <li><a class="reference internal" href="#float-hessian-approximation-performance"><code class="docutils literal notranslate"><span class="pre">float</span></code> Hessian approximation (performance)</a></li>
-<li><a class="reference internal" href="#mkl-and-stack-size">MKL and stack size</a></li>
+<li><a class="reference internal" href="#mkl">MKL</a></li>
+<li><a class="reference internal" href="#stack-size">Stack size</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#compiler-path">Compiler path</a><ul>

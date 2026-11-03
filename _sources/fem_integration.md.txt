@@ -99,6 +99,7 @@ return
 As described in [Symbol-Data Maps](symbol_data_maps.md), `MappedWorkspace` provides _summation_ facilities that allows for easy and efficient implementation of numerical integration.
 Note that SymX's summation is also _symbolic_ and **not** unrolled, which would explode the number of operations.
 Differentiation is efficiently handled as a summation.
+For element-specific integration-point data, variable point counts, and factorized FEM energies with mapped node positions, see [Advanced FEM and Integration](advanced_integration.md).
 
 ## FEM Integrator
 Finally, the whole summation logic is wrapped in `fem_integrator` for convenience:
@@ -118,6 +119,7 @@ Scalar fem_integrator(MappedWorkspace<double>& mws, const FEM_Element& element, 
 }
 ```
 With this, the user only needs to indicate the element type and what to do with the integration point.
+The [rubber extrusion showcase](rubber-extrusion-example) includes a complete implementation using this integrator alongside indexed-quadrature and factorized FEM alternatives.
 
 
 ## Example

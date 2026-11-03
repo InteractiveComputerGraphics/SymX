@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="The Adjoint Method" href="adjoint_method.html"><link rel="prev" title="Newton’s Method" href="newtons_method.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Advanced FEM and Integration" href="advanced_integration.html"><link rel="prev" title="Newton’s Method" href="newtons_method.html">
         <link rel="prefetch" href="_static/symx250.png" as="image">
 
     <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 -->
@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -275,7 +276,7 @@ First order runs are also useful for visualization and debugging as they usually
 <p>Define the potential and its DoF sets in the usual way, then construct the optimizer with the same context and optional callbacks used by Newton’s method:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="nc">spGlobalPotential</span><span class="w"> </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">GlobalPotential</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
 <span class="c1">// objective-&gt;add_potential(...);</span>
-<span class="c1">// objective-&gt;add_dof(variables, &quot;variables&quot;);</span>
+<span class="c1">// objective-&gt;add_dof(variables, "variables");</span>
 
 <span class="nc">spContext</span><span class="w"> </span><span class="n">context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Context</span><span class="o">::</span><span class="nf">create</span><span class="p">();</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">optimizer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FirstOrderOptimizer</span><span class="o">::</span><span class="nf">create</span><span class="p">(</span><span class="n">objective</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">);</span>
@@ -320,12 +321,12 @@ Invalid initial values or gradients return <code class="docutils literal notrans
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="adjoint_method.html">
+          <a class="next-page" href="advanced_integration.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">The Adjoint Method</div>
+                <div class="title">Advanced FEM and Integration</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

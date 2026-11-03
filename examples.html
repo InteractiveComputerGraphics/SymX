@@ -218,6 +218,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fem_integration.html">FEM Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="newtons_method.html">Newton’s Method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="first_order_optimization.html">First-order optimization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_integration.html">Advanced FEM and Integration</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Differentiable Simulation (Layer 5)</span></p>
 <ul>
@@ -331,10 +332,10 @@ The benchmark sweeps across:</p>
 </ul>
 <p>Showcases assembly-style pipelines.
 Useful for understanding performance and the trade-offs between assembler back-ends.</p>
-</section>
 <hr class="docutils" />
+</section>
 <section id="rubber-extrusion">
-<h2>Rubber Extrusion<a class="headerlink" href="#rubber-extrusion" title="Link to this heading">¶</a></h2>
+<span id="rubber-extrusion-example"></span><h2>Rubber Extrusion<a class="headerlink" href="#rubber-extrusion" title="Link to this heading">¶</a></h2>
 <p><img alt="Rubber extrusion" src="_images/rubber_extrusion.jpg" /></p>
 <p><strong>File:</strong> <a class="reference download internal" download="" href="_downloads/5d1fd4a05865bf0510145fdf24363e55/rubber_extrusion.cpp"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">rubber_extrusion.cpp</span></code></span></a></p>
 <p>Quasistatic simulation of a block of nearly-incompressible rubber (ν = 0.49) being stretched to five times its length.
@@ -347,6 +348,9 @@ The solver finds the solution for FEM element types Tet4, Hex8, Tet10, and Hex27
 <li><p>Structured logging.</p></li>
 </ul>
 <p>Showcases how to use the high-level <code class="docutils literal notranslate"><span class="pre">NewtonsMethod</span></code> to solve FEM problems compactly and with minimal involvement from the user.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">RubberExtrusionMode</span></code> argument selects <code class="docutils literal notranslate"><span class="pre">StandardFixedSummation</span></code> for a shared rule, <code class="docutils literal notranslate"><span class="pre">StandardIndexedSummation</span></code> for indexed integration-point data, or <code class="docutils literal notranslate"><span class="pre">FactorizedFEM</span></code> for a split energy definition.
+The call in <a class="reference download internal" download="" href="_downloads/17ca01fc314937fff79e29f228d8fdb5/examples_main.cpp"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">examples_main.cpp</span></code></span></a> selects <code class="docutils literal notranslate"><span class="pre">FactorizedFEM</span></code>; change this argument to compare the definitions.
+See <a class="reference internal" href="advanced_integration.html"><span class="std std-doc">Advanced FEM and Integration</span></a> for the corresponding APIs and for variable-length summations.</p>
 </section>
 <hr class="docutils" />
 <section id="inverse-cantilever">
